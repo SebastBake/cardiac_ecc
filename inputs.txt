@@ -1,0 +1,29 @@
+#inputs for fortran program:
+#CELLID,NODEFILE,ELEMFILE
+'Cell_schneider_tomo'
+#set WITH_MITO_ELEMENTS to either have holes or mesh elements representing mitos.
+1
+#node and element files
+'./schneider_tomo/combined_tet_mesh_wryrgap.1.node','./schneider_tomo/combined_tet_mesh_wryrgap.1.ele'
+#bd face file
+'./schneider_tomo/combined_tet_mesh_wryrgap.1.face','./schneider_tomo/combined_tet_mesh_wryrgap.1.bdnode'
+#ryr spatial density file,Number of channels per cluster
+'./schneider_tomo/combined_tet_mesh_wryrgap.1_spherical_ryr_kie_wh0.05.simPP6_N87_human_tausimnum_1.txt',1
+#CEllML FILE,switch to turn on cellml model or not.
+'./ryrNtroponinNfluo3_wryrscaling_wtimelag_wtimecourse.xml',1
+#init_Ca,Diffx,Diffy, Diffz,iCa
+0.1,0.2200,0.2200,0.22,2.8e-15
+#init_F3,f3Diffx,f3Diffy,f3Diffz
+22.92,0.042,0.042,0.042
+#init_F3Ca,f3caDiffx,f3caDiffy,f3caDiffz
+2.08,0.042,0.042,0.042
+#initial distribution of CaTnC - homogenous through myofibril region
+10.0
+#mitoCaDiffx,mitoCaDiffy,mitoCaDiffz - used if WITH_MITO_ELEMENTS=1
+0.0,0.0,0.0
+#mito_initCa,mito_initF,mito_initFCa,mito_initCaTnC
+0.0,0.0,0.0,0.0
+#Tstart,Tend,Tstep,ODESTEP
+0.0,30.0,0.1,0.0001
+#file output frequency
+10
