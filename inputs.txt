@@ -4,11 +4,11 @@
 #set WITH_MITO_ELEMENTS to either have holes or mesh elements representing mitos.
 1
 #node and element files
-'./schneider_tomo/combined_tet_mesh_wryrgap.1.node','./schneider_tomo/combined_tet_mesh_wryrgap.1.ele'
+'./meshinputs/combined_tet_mesh_wryrgap.1.node','./meshinputs/combined_tet_mesh_wryrgap.1.ele'
 #bd face file
-'./schneider_tomo/combined_tet_mesh_wryrgap.1.face','./schneider_tomo/combined_tet_mesh_wryrgap.1.bdnode'
+'./meshinputs/combined_tet_mesh_wryrgap.1.face','./meshinputs/combined_tet_mesh_wryrgap.1.bdnode'
 #ryr spatial density file,Number of channels per cluster
-'./schneider_tomo/combined_tet_mesh_wryrgap.1_spherical_ryr_kie_wh0.05.simPP6_N87_human_tausimnum_1.txt',1
+'./meshinputs/combined_tet_mesh_wryrgap.1_spherical_ryr_kie_wh0.05.simPP6_N87_human_tausimnum_1.txt',1
 #CEllML FILE,switch to turn on cellml model or not.
 './ryrNtroponinNfluo3_wryrscaling_wtimelag_wtimecourse.xml',1
 #init_Ca,Diffx,Diffy, Diffz,iCa
