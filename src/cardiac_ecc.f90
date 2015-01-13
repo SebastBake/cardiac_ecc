@@ -1,7 +1,7 @@
 !> \file
-!> $Id: MoreComplexMeshExample.f90 1528 2010-09-21 01:32:29Z chrispbradley $
-!> \author Chris Bradley
-!> \brief This is an example program which sets up a field which uses a more complex mesh using OpenCMISS calls.
+!> $Id: cardiac_ecc.f90 2014-12-16 vraj004 $
+!> \author Vijay Rajagopal
+!> \brief Main program file to simulate cardiac ECC using opencmiss library routines
 !>
 !> \section LICENSE
 !>
@@ -40,13 +40,13 @@
 !> the terms of any one of the MPL, the GPL or the LGPL.
 !>
 
-!> \example Ca_Dynamics_3DExample.f90
+!> \example cardiac_ecc.f90
 !! Example program which sets up a singpe species diffusion problem.
 !! \par Latest Builds:
 !<
 
 !> Main program
-PROGRAM CA_DYNAMICS_3D_MULTIESPECIESEXAMPLE
+PROGRAM CARDIAC_ECC
 
   USE OPENCMISS
   USE MPI
@@ -1344,4 +1344,4 @@ CALL CMISSField_ParameterSetUpdateFinish(CellMLIntermediateField,CMISS_FIELD_U_V
   STOP
 
 
-END PROGRAM CA_DYNAMICS_3D_MULTIESPECIESEXAMPLE
+END PROGRAM CARDIAC_ECC
