@@ -4,12 +4,13 @@
 		<variable name="Ca_i" public_interface="in" units="uM"/>
 		<variable initial_value="0.1" name="Ca_dyad" units="uM"/>
 		<variable initial_value="2.08" name="F4Ca_dyad" units="uM"/>
-		<variable initial_value="25" name="F4Total_dyad" units="uM"/>
+		<variable initial_value="22.92" name="F4_dyad" units="uM"/>
+		<variable name="F4Total_dyad" units="uM"/>
 		<variable initial_value="4.19e-21" name="V_dyad" units="m3"/>
 		<variable initial_value="40" name="NumRyR" units="dimensionless"/>
 		<variable name="J_ryr" public_interface="out" units="uMpms"/>
 		<variable initial_value="0.6e-15" name="iCa" units="Cpms"/>
-		<variable initial_value="0.0" name="P_open" units="dimensionless"/>
+		<variable initial_value="0.05" name="P_open" units="dimensionless"/>
 		<variable initial_value="9.6485e4" name="F" units="Cpmol"/>
 		<variable name="J_cyto" public_interface="out" units="uMpms"/>
 		<variable name="J_f4dyad" public_interface="out" units="uMpms"/>
@@ -19,11 +20,16 @@
 		<variable initial_value=".11" name="kon_f4dyad" units="puMms"/>
 		<variable initial_value=".1" name="koff_f4dyad" units="pms"/>
 		<variable name="J_f4cyto" public_interface="out" units="uMpms"/>
+		<variable name="J_f4cacyto" public_interface="out" units="uMpms"/>
 		<variable name="F4Ca_i" public_interface="in" units="uM"/>
+		<variable name="F4_i" public_interface="in" units="uM"/>
 		<variable name="Ca_jsr" public_interface="in" units="uM"/>
 		<variable name="Ca_nsr" public_interface="in" units="uM"/>
 		<variable name="time" public_interface="in" units="ms"/>
 		<variable initial_value="0.286e-18" name="g_cyto" units="m3pms"/>
+		<variable initial_value="0.286e-19" name="g_f4cacyto" units="m3pms"/>
+		<variable initial_value="0.286e-19" name="g_f4cyto" units="m3pms"/>
+
 		<math xmlns="http://www.w3.org/1998/Math/MathML">
 			<apply>
 				<eq/>
@@ -49,17 +55,28 @@
 			<apply><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>P_open</ci></apply><apply><minus/><apply><times/><ci>kco_ryr</ci><apply><minus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn><ci>P_open</ci></apply></apply><apply><times/><ci>koc_ryr</ci><ci>P_open</ci></apply></apply></apply>
 		</math>
 		<math xmlns="http://www.w3.org/1998/Math/MathML">
-			<apply><eq/><ci>J_f4dyad</ci><apply><minus/><apply><times/><ci>koff_f4dyad</ci><ci>F4Ca_dyad</ci></apply><apply><times/><ci>kon_f4dyad</ci><apply><times/><ci>Ca_dyad</ci><apply><minus/><ci>F4Total_dyad</ci><ci>F4Ca_dyad</ci></apply></apply></apply></apply></apply>
-			<apply><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>F4Ca_dyad</ci></apply><apply><minus/><apply><minus/><ci>J_f4dyad</ci></apply><ci>J_f4cyto</ci></apply></apply>
-			<apply id="CytoF4Flux"><eq/><ci>J_f4cyto</ci><apply><divide/><apply><times/><ci>g_cyto</ci><apply><minus/><ci>F4Ca_dyad</ci><ci>F4Ca_i</ci></apply></apply><ci>V_dyad</ci></apply></apply>
+			<apply><eq/><ci>J_f4dyad</ci><apply><minus/><apply><times/><ci>koff_f4dyad</ci><ci>F4Ca_dyad</ci></apply><apply><times/><ci>kon_f4dyad</ci><apply><times/><ci>Ca_dyad</ci><ci>F4_dyad</ci></apply></apply></apply></apply>
+			<apply><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>F4Ca_dyad</ci></apply><apply><minus/><apply><minus/><ci>J_f4dyad</ci></apply><ci>J_f4cacyto</ci></apply></apply>
+			<apply><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>F4_dyad</ci></apply><apply><minus/><ci>J_f4dyad</ci><ci>J_f4cyto</ci></apply></apply>
+			<apply id="CytoF4CaFlux"><eq/><ci>J_f4cacyto</ci><apply><divide/><apply><times/><ci>g_f4cacyto</ci><apply><minus/><ci>F4Ca_dyad</ci><ci>F4Ca_i</ci></apply></apply><ci>V_dyad</ci></apply></apply>
+			<apply id="CytoF4Flux"><eq/><ci>J_f4cyto</ci><apply><divide/><apply><times/><ci>g_f4cyto</ci><apply><minus/><ci>F4_dyad</ci><ci>F4_i</ci></apply></apply><ci>V_dyad</ci></apply></apply>
 		</math>
+		<math xmlns="http://www.w3.org/1998/Math/MathML">
+			<apply id="F4Total_dyad"><eq/>
+				<ci>F4Total_dyad</ci>
+				<apply>
+					<plus/><ci>F4_dyad</ci><ci>F4Ca_dyad</ci></apply>
+			</apply>
+		</math>
+
 	</component>
 	<component name="Cytoplasm">
 		<variable initial_value="0.1" name="Ca_i" public_interface="out" units="uM"/>
 		<variable initial_value="10" name="CaiTnC" units="uM"/>
 		<variable initial_value="70" name="TnCTotal" units="uM"/>
 		<variable initial_value="2.08" name="F4Ca" public_interface="out" units="uM"/>
-		<variable initial_value="25" name="F4Total" units="uM"/>
+		<variable initial_value="22.92" name="F4" public_interface="out" units="uM"/>
+		<variable name="F4Total" units="uM"/>
 		<variable name="J_tnc" units="uMpms"/>
 		<variable initial_value="0.0327" name="kon_tnc" units="puMms"/>
 		<variable initial_value="0.0196" name="koff_tnc" units="pms"/>
@@ -70,17 +87,45 @@
 		<variable name="J_cleft" units="uMpms"/>
 		<variable name="J_f4cyto" public_interface="in" units="uMpms"/>
 		<variable name="J_f4cleft" units="uMpms"/>
+		<variable name="J_f4cacyto" public_interface="in" units="uMpms"/>
+		<variable name="J_f4cacleft" units="uMpms"/>
 
 		<math xmlns="http://www.w3.org/1998/Math/MathML">
 			<apply id="CaiTnCFlux"><eq/><ci>J_tnc</ci><apply><minus/><apply><times/><ci>CaiTnC</ci><ci>koff_tnc</ci></apply><apply><times/><ci>kon_tnc</ci><apply><minus/><ci>TnCTotal</ci><ci>CaiTnC</ci></apply><ci>Ca_i</ci></apply></apply></apply>
 		</math>
 		<math xmlns="http://www.w3.org/1998/Math/MathML">
-			<apply id="F4CaFlux"><eq/><ci>J_f4</ci><apply><minus/><apply><times/><ci>koff_f4</ci><ci>F4Ca</ci></apply><apply><times/><ci>kon_f4</ci><ci>Ca_i</ci><apply><minus/><ci>F4Total</ci><ci>F4Ca</ci></apply></apply></apply></apply>
-		</math><math xmlns="http://www.w3.org/1998/Math/MathML">
-			<apply id="F4Ca"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>F4Ca</ci></apply><apply><plus/><apply><minus/><ci>J_f4</ci></apply><ci>J_f4cleft</ci></apply></apply>
+			<apply id="CaiTnC"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>CaiTnC</ci></apply><apply><minus/><ci>J_tnc</ci></apply></apply>
+		</math>
+
+		<math xmlns="http://www.w3.org/1998/Math/MathML">
+			<apply id="F4CaFlux"><eq/>
+						<ci>J_f4</ci>
+						<apply>
+							<minus/>
+								<apply><times/><ci>koff_f4</ci><ci>F4Ca</ci></apply>
+								<apply><times/><ci>kon_f4</ci><ci>Ca_i</ci><ci>F4</ci></apply>
+							</apply>
+						</apply>
 		</math>
 		<math xmlns="http://www.w3.org/1998/Math/MathML">
-			<apply id="CaiTnC"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>CaiTnC</ci></apply><apply><minus/><ci>J_tnc</ci></apply></apply>
+			<apply id="F4Ca"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>F4Ca</ci></apply><apply><plus/><apply><minus/><ci>J_f4</ci></apply><ci>J_f4cacleft</ci></apply></apply>
+		</math>
+		<math xmlns="http://www.w3.org/1998/Math/MathML">
+			<apply id="F4"><eq/>
+			<apply>
+				<diff/>
+					<bvar><ci>time</ci></bvar><ci>F4</ci></apply>
+				<apply>
+					<plus/><ci>J_f4</ci><ci>J_f4cleft</ci></apply>
+				</apply>
+		</math>
+
+		<math xmlns="http://www.w3.org/1998/Math/MathML">
+			<apply id="F4Total"><eq/>
+				<ci>F4Total</ci>
+				<apply>
+					<plus/><ci>F4</ci><ci>F4Ca</ci></apply>
+			</apply>
 		</math>
 		<math xmlns="http://www.w3.org/1998/Math/MathML">
 			<apply id="Ca_i"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>Ca_i</ci></apply><apply><plus/><ci>J_tnc</ci><ci>J_f4</ci><ci>J_cleft</ci></apply></apply>
@@ -88,6 +133,8 @@
 		<math xmlns="http://www.w3.org/1998/Math/MathML">
 			<apply><eq/><ci>J_cleft</ci><ci>J_cyto</ci></apply>
 			<apply><eq/><ci>J_f4cleft</ci><ci>J_f4cyto</ci></apply>
+			<apply><eq/><ci>J_f4cacleft</ci><ci>J_f4cacyto</ci></apply>
+
 		</math>
 	</component>
 
@@ -149,7 +196,7 @@
 		<map_components component_1="Cytoplasm" component_2="Dyad"/>
 		<map_variables variable_1="Ca_i" variable_2="Ca_i"/>
 		<map_variables variable_1="J_cyto" variable_2="J_cyto"/>
-	<map_variables variable_1="F4Ca" variable_2="F4Ca_i"/><map_variables variable_1="J_f4cyto" variable_2="J_f4cyto"/></connection>
+	<map_variables variable_1="F4Ca" variable_2="F4Ca_i"/><map_variables variable_1="J_f4cyto" variable_2="J_f4cyto"/><map_variables variable_1="F4" variable_2="F4_i"/><map_variables variable_1="J_f4cacyto" variable_2="J_f4cacyto"/></connection>
 	<connection>
 		<map_components component_1="environment" component_2="Cytoplasm"/>
 		<map_variables variable_1="time" variable_2="time"/>
