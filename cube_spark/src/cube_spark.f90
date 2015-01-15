@@ -1,7 +1,7 @@
 !> \file
-!> $Id: MoreComplexMeshExample.f90 1528 2010-09-21 01:32:29Z chrispbradley $
+!> $Id: cube_spark.f90 1528 2010-09-21 01:32:29Z  $
 !> \author Chris Bradley
-!> \brief This is an example program which sets up a field which uses a more complex mesh using OpenCMISS calls.
+!> \brief This is test example of calcium spark kinetics and diffusion in cardiac cells.
 !>
 !> \section LICENSE
 !>
@@ -40,8 +40,8 @@
 !> the terms of any one of the MPL, the GPL or the LGPL.
 !>
 
-!> \example Ca_CubeExample.f90
-!! Example program which sets up a single species reaction-diffusion problem of calcium through a simplified cubic cardiac cell geometry .
+!> \example cube_spark.f90
+!! Example program which sets up a single calcium release site inside a cubic cardiac cell geometry .
 !! \par Latest Builds:
 !<
 
@@ -76,7 +76,7 @@ PROGRAM CUBE_SPARK
 
 
   INTEGER(CMISSIntg), PARAMETER :: CaTnCFieldUserNumber=13
-  INTEGER(CMISSIntg), PARAMETER :: RyRDenseFieldUserNumber=16
+  INTEGER(CMISSIntg), PARAMETER :: NumRyRFieldUserNumber=16
   INTEGER(CMISSIntg), PARAMETER :: ProblemUserNumber=17
   INTEGER(CMISSIntg), PARAMETER :: CellMLUserNumber=18
   INTEGER(CMISSIntg), PARAMETER :: CellMLModelsFieldUserNumber=19
@@ -120,7 +120,7 @@ PROGRAM CUBE_SPARK
   TYPE(CMISSCellMLType) :: CellML
   TYPE(CMISSCellMLEquationsType) :: CellMLEquations
   TYPE(CMISSFieldType) :: CellMLModelsField,CellMLStateField,CellMLIntermediateField,CellMLParametersField
-  TYPE(CMISSFieldType) :: iCaField,CaTnCField,RyRDenseField,iFCaField,iFField
+  TYPE(CMISSFieldType) :: iCaField,CaTnCField,NumRyRField,iFCaField,iFField
   TYPE(CMISSGeneratedMeshType) :: GeneratedMesh    
 
   !Program variables
@@ -133,7 +133,7 @@ PROGRAM CUBE_SPARK
   INTEGER(CMISSIntg),ALLOCATABLE,DIMENSION(:,:) :: NodeNums
   REAL(CMISSDP) :: nodex,nodey,nodez,sphere_constant,RELEASE_RADIUS
   LOGICAL :: EXPORT_FIELD=.FALSE.
-  INTEGER(CMISSIntg) :: CELL_TYPE,NumRyRsPerCluster
+  INTEGER(CMISSIntg) :: CELL_TYPE,NumRyRsPerCluster,RELEASE_NODE_RANK
   INTEGER(CMISSIntg) :: ryrModelIndex,GeometricMeshComponent
   INTEGER(CMISSIntg) :: Err,EquationsSetIndex,NODE_NUMBER,RYR_NODE_NUMBER,CONDITION,CellMLIndex,ELEM_NUMBER,NUMBER_RELEASE_NODES
   INTEGER(CMISSIntg),DIMENSION(166) :: CELLBOUNDARYNODES
@@ -143,7 +143,7 @@ PROGRAM CUBE_SPARK
   INTEGER(CMISSIntg) :: NonZeroNodes
   CHARACTER(250) :: CELLID,NODEFILE,ELEMFILE,CELLPATH,RyRModel,RYRDENSITYFILE
   INTEGER(CMISSIntg) :: NumberOfComputationalNodes,ComputationalNodeNumber,NodeDomain,ElementDomain
-
+  INTEGER :: MPI_IERROR
 #ifdef WIN32
   !Quickwin type
   LOGICAL :: QUICKWIN_STATUS=.FALSE.
@@ -262,8 +262,8 @@ PROGRAM CUBE_SPARK
   !Time to create a mesh - wohoo!
   !Read in nodes (set up RyRDensity array with column 
   !of zeros for later updating).
-  NODEFILE="cube.1.node"
-  ELEMFILE="cube.1.ele"
+  NODEFILE="cuboid.1.node"
+  ELEMFILE="cuboid.1.ele"
   open(unit=10,file=NODEFILE,status='old',action='read',iostat=st)
   IF(st>0)then
     print *,'Error opening node file',st
@@ -419,37 +419,40 @@ PROGRAM CUBE_SPARK
     & 1,iCa,Err)
 
 
-  !RyRDenseField
-  !Set up RyR spatial density field
+  !NumRyRField
+  !Set up number of RyRs in each cluster as a spatial distribution field
   !set up intensity field
-  CALL CMISSField_Initialise(RyRDenseField,Err)
-  CALL CMISSField_CreateStart(RyRDenseFieldUserNumber,Region,RyRDenseField,Err)
-  CALL CMISSField_TypeSet(RyRDenseField,CMISS_FIELD_GENERAL_TYPE,Err)
-  CALL CMISSField_MeshDecompositionSet(RyRDenseField,Decomposition,Err)
-  CALL CMISSField_GeometricFieldSet(RyRDenseField,GeometricField,Err)
-  CALL CMISSField_NumberOfVariablesSet(RyRDenseField,1,Err)
-  CALL CMISSField_VariableTypesSet(RyRDenseField,[CMISS_FIELD_U_VARIABLE_TYPE],Err)
-  CALL CMISSField_DataTypeSet(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_DP_TYPE,Err)
-  CALL CMISSField_DimensionSet(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_SCALAR_DIMENSION_TYPE,Err)
-  CALL CMISSField_NumberOfComponentsSet(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,1,Err)
-  CALL CMISSField_VariableLabelSet(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,"RyR Density Field",Err)
+  CALL CMISSField_Initialise(NumRyRField,Err)
+  CALL CMISSField_CreateStart(NumRyRFieldUserNumber,Region,NumRyRField,Err)
+  CALL CMISSField_TypeSet(NumRyRField,CMISS_FIELD_GENERAL_TYPE,Err)
+  CALL CMISSField_MeshDecompositionSet(NumRyRField,Decomposition,Err)
+  CALL CMISSField_GeometricFieldSet(NumRyRField,GeometricField,Err)
+  CALL CMISSField_NumberOfVariablesSet(NumRyRField,1,Err)
+  CALL CMISSField_VariableTypesSet(NumRyRField,[CMISS_FIELD_U_VARIABLE_TYPE],Err)
+  CALL CMISSField_DataTypeSet(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_DP_TYPE,Err)
+  CALL CMISSField_DimensionSet(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_SCALAR_DIMENSION_TYPE,Err)
+  CALL CMISSField_NumberOfComponentsSet(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,1,Err)
+  CALL CMISSField_VariableLabelSet(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,"Num RyR Field",Err)
   CALL CMISSField_ComponentMeshComponentGet(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE, & 
     & 1,GeometricMeshComponent,ERR)
   !Default to the geometric interpolation setup
-  CALL CMISSField_ComponentMeshComponentSet(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+  CALL CMISSField_ComponentMeshComponentSet(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
     & GeometricMeshComponent,ERR)            
   !Specify the interpolation to be same as geometric interpolation
-  CALL CMISSField_ComponentInterpolationSet(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+  CALL CMISSField_ComponentInterpolationSet(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
     & CMISS_FIELD_NODE_BASED_INTERPOLATION,ERR)
-  CALL CMISSField_CreateFinish(RyRDenseField,Err)
-  !Initialise RyR intensity Field
-  CALL CMISSField_ComponentValuesInitialise(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL CMISSField_CreateFinish(NumRyRField,Err)
+  !Initialise Num RyR Field
+  CALL CMISSField_ComponentValuesInitialise(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
     & 1,0.0_CMISSDP,Err)
-  
+
   !Define a single RyR release node, multiply the intensity by number of ryrs per cluster
   CALL CMISSDecomposition_NodeDomainGet(Decomposition,RYR_NODE_NUMBER,1,NodeDomain,Err)
+  RELEASE_NODE_RANK = NodeDomain
+
   IF(NodeDomain.EQ.ComputationalNodeNumber) THEN
-    CALL CMISSField_ParameterSetUpdateNode(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE, &
+    RELEASE_NODE_RANK = ComputationalNodeNumber
+    CALL CMISSField_ParameterSetUpdateNode(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE, &
       & CMISS_FIELD_VALUES_SET_TYPE,1,1,RYR_NODE_NUMBER,1,(NumRyRsPerCluster*NodeRyRDensity),Err)
 
     !noting the coordinates of the ryr release node.
@@ -459,32 +462,43 @@ PROGRAM CUBE_SPARK
       &   1,RYR_NODE_NUMBER,2,ryr_nodey,Err)
     CALL CMISSField_ParameterSetGetNode(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1, &
       &   1,RYR_NODE_NUMBER,3,ryr_nodez,Err)
-  ENDIF
-  CALL CMISSField_ParameterSetUpdateStart(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSField_ParameterSetUpdateFinish(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
-  !Now assign ryr density to nodes that fall within a 200 nm (0.2 micron) radius of the center of the RyR_Node_Number
-  RELEASE_RADIUS = 0.2_CMISSDP
-  !DO node=1,NUMBER_OF_NODES
-  !  NODE_NUMBER=NodeNums(node,1)
-  !  CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
-  !  IF(NodeDomain.EQ.ComputationalNodeNumber) THEN
-  !    CALL CMISSField_ParameterSetGetNode(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1, &
-  !      &   1,NODE_NUMBER,1,nodex,Err)
-  !    CALL CMISSField_ParameterSetGetNode(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1, &
-  !      &   1,NODE_NUMBER,2,nodey,Err)
-  !    CALL CMISSField_ParameterSetGetNode(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1, &
-  !      &   1,NODE_NUMBER,3,nodez,Err)
-  !    sphere_constant = SQRT((ryr_nodex-nodex)**2+(ryr_nodez-nodez)**2+(ryr_nodez-nodez)**2)
-  !    IF(sphere_constant.LE.RELEASE_RADIUS) THEN
-  !      CALL CMISSField_ParameterSetUpdateNode(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE, &
-  !        & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,(NumRyRsPerCluster*1.0_CMISSDP),Err)
-  !    ENDIF
-  !  ENDIF
-  !ENDDO
-  CALL CMISSField_ParameterSetUpdateStart(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSField_ParameterSetUpdateFinish(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-  NUMBER_RELEASE_NODES = 0_CMISSIntg
+  ENDIF
+  CALL MPI_BARRIER(MPI_COMM_WORLD,MPI_IERROR)
+
+  CALL MPI_BCAST(ryr_nodex,1,MPI_DOUBLE,RELEASE_NODE_RANK,MPI_COMM_WORLD,MPI_IERROR)
+  CALL MPI_BCAST(ryr_nodey,1,MPI_DOUBLE,RELEASE_NODE_RANK,MPI_COMM_WORLD,MPI_IERROR)
+  CALL MPI_BCAST(ryr_nodez,1,MPI_DOUBLE,RELEASE_NODE_RANK,MPI_COMM_WORLD,MPI_IERROR)
+
+  CALL CMISSField_ParameterSetUpdateStart(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSField_ParameterSetUpdateFinish(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  !Now assign ryr density to nodes that fall within a 100 nm (0.1 micron) radius of the center of the RyR_Node_Number
+  RELEASE_RADIUS = 0.1_CMISSDP
+  NUMBER_RELEASE_NODES=1
+  DO node=1,NUMBER_OF_NODES
+    NODE_NUMBER=NodeNums(node,1)
+    CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+    IF(NodeDomain.EQ.ComputationalNodeNumber) THEN
+      CALL CMISSField_ParameterSetGetNode(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1, &
+        &   1,NODE_NUMBER,1,nodex,Err)
+      CALL CMISSField_ParameterSetGetNode(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1, &
+        &   1,NODE_NUMBER,2,nodey,Err)
+      CALL CMISSField_ParameterSetGetNode(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1, &
+        &   1,NODE_NUMBER,3,nodez,Err)
+      sphere_constant = SQRT((ryr_nodex-nodex)**2+(ryr_nodey-nodey)**2+(ryr_nodez-nodez)**2)
+      IF(sphere_constant.LE.RELEASE_RADIUS) THEN
+        WRITE(*,*) 'Node Number',NODE_NUMBER
+        WRITE(*,*) 'COORDS:', nodex,nodey,nodez
+        WRITE(*,*) 'REL CENTRE:',ryr_nodex,ryr_nodey,ryr_nodez
+        WRITE(*,*) 'DISTANCE:',sphere_constant 
+        CALL CMISSField_ParameterSetUpdateNode(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE, &
+          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,(NumRyRsPerCluster*NodeRyRDensity),Err)
+        NUMBER_RELEASE_NODES = NUMBER_RELEASE_NODES+1
+      ENDIF
+    ENDIF
+  ENDDO
+  CALL CMISSField_ParameterSetUpdateStart(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSField_ParameterSetUpdateFinish(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
   WRITE(*,*) "The final number of nodes which will be releasing Ca2+ =", NUMBER_RELEASE_NODES
   !Set up the fields for the other buffers which will store concentrations of the Ca-Buffer complex
   !F equations
@@ -633,15 +647,15 @@ PROGRAM CUBE_SPARK
   ! set iCa as known so that it can be set as spatially varying in opencmiss.
   !CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/iCa",Err)
   ! set RyRDensity as known so that it can be set as spatially varying in opencmiss.
-  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/iCa",Err)
-  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/ryrDensity",Err)
+  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"Dyad/iCa",Err)
+  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"Dyad/NumRyR",Err)
 
   !to get from the CellML side. variables in cellml model that are not state variables, but are dependent on independent and state variables. 
   !- components of intermediate field
   !fluxes of the different buffers and CaRUs that I want to get out as intermediate variables
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"CRU/Jryr",Err)
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"FluoBuffer/Jfluo",Err)
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"TnCBuffer/Jtnc",Err)
+  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Dyad/J_ryr",Err)
+  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Cytoplasm/J_f4",Err)
+  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Cytoplasm/J_tnc",Err)
   !Finish the CellML environment
   CALL CMISSCellML_CreateFinish(CellML,Err)
 
@@ -649,40 +663,40 @@ PROGRAM CUBE_SPARK
   !Mapping free calcium in opencmiss to that in cellml.
   CALL CMISSCellML_FieldMapsCreateStart(CellML,Err)
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CRU/Ca_free",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/Ca_free",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Cytoplasm/Ca_i",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Cytoplasm/Ca_i",CMISS_FIELD_VALUES_SET_TYPE, &
     & CaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
    !Mapping iCaField to iCa in the cellml model
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,iCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CRU/iCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/iCa",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Dyad/iCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Dyad/iCa",CMISS_FIELD_VALUES_SET_TYPE, &
     & iCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
-   !Mapping RyRDenseField to RyRDensity in the cellml model
-  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CRU/ryrDensity",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/ryrDensity",CMISS_FIELD_VALUES_SET_TYPE, &
-    & RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+   !Mapping NumRyRField to RyRDensity in the cellml model
+  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Dyad/NumRyR",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Dyad/NumRyR",CMISS_FIELD_VALUES_SET_TYPE, &
+    & NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping Buffer-Complex resting values of cellml model to appropriate fields set up above
 
    !Mapping F
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,FField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"FluoBuffer/Fluo_free",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"FluoBuffer/Fluo_free",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Cytoplasm/F4",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Cytoplasm/F4",CMISS_FIELD_VALUES_SET_TYPE, &
     & FField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
    !Mapping FCa
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,FCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"FluoBuffer/FluoCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"FluoBuffer/FluoCa",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Cytoplasm/F4Ca",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Cytoplasm/F4Ca",CMISS_FIELD_VALUES_SET_TYPE, &
     & FCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
    !Mapping CaTnC
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"TnCBuffer/CaTnC",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"TnCBuffer/CaTnC",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Cytoplasm/CaiTnC",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Cytoplasm/CaiTnC",CMISS_FIELD_VALUES_SET_TYPE, &
     & CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
   !Finish the creation of CellML <--> OpenCMISS field maps
@@ -721,8 +735,9 @@ PROGRAM CUBE_SPARK
   !Finish the creation of CellML parameters
   CALL CMISSCellML_ParametersFieldCreateFinish(CellML,Err)
 
- 
+
   !Create the equations set equations for Ca
+  WRITE(*,*) 'Creating the equations for the equation sets'
   CALL CMISSEquations_Initialise(CaEquations,Err)
   CALL CMISSEquationsSet_EquationsCreateStart(CaEquationsSet,CaEquations,Err)
   !Set the equations matrices sparsity type
