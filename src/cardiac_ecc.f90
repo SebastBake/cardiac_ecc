@@ -141,7 +141,8 @@ PROGRAM CARDIAC_ECC
     & WITH_MITO_ELEMENTS,ELEM_LABEL,CYTO_REGION_MARKER,MODEL_ON
   REAL(CMISSDP) :: startT,endT,Tstep,ODE_TIME_STEP,VALUE,init_Ca,init_FCa, init_F, ryr_nodex,ryr_nodey,ryr_nodez, &
     & caDiffx, caDiffy,caDiffz,fcaDiffx, fcaDiffy,fcaDiffz,fDiffx,fDiffy,fDiffz,store_coeff,iCa,init_CaTnC, &
-    & NodeRyRDensity,mitoCaDiffx,mitoCaDiffy,mitoCaDiffz,mito_initCa,mito_initF, mito_initFCa,mito_initCaTnC
+    & NodeRyRDensity,mitoCaDiffx,mitoCaDiffy,mitoCaDiffz,mito_initCa,mito_initF, mito_initFCa,mito_initCaTnC,&
+    & mitoFDiffx,mitoFDiffy,mitoFDiffz,mitoFCaDiffx,mitoFCaDiffy,mitoFCaDiffz
   INTEGER(CMISSIntg) :: NumRyRsPerCluster,NonZeroNodes,MITOBDFaceNode_idx,NUMBER_OF_MITOBDFACES
   CHARACTER(250) :: CELLID,NODEFILE,ELEMFILE,CELLPATH,RyRModel,RYRDENSITYFILE,MITOBDFACEFILE,CELLBDNODESFILE
   INTEGER(CMISSIntg) :: NumberOfComputationalNodes,ComputationalNodeNumber,NodeDomain,ElementDomain
@@ -198,9 +199,13 @@ PROGRAM CARDIAC_ECC
     READ(9,*)
     READ(9,*) init_CaTnC
     READ(9,*)
-    READ(9,*) mitoCaDiffx,mitoCaDiffy,mitoCaDiffz
-    READ(9,*) 
-    READ(9,*) mito_initCa,mito_initF, mito_initFCa,mito_initCaTnC
+    READ(9,*) mito_initCa,mitoCaDiffx,mitoCaDiffy,mitoCaDiffz
+    READ(9,*)
+    READ(9,*) mito_initF,mitoFDiffx,mitoFDiffy,mitoFDiffz
+    READ(9,*)
+    READ(9,*) mito_initFCa,mitoFCaDiffx,mitoFCaDiffy,mitoFCaDiffz
+    READ(9,*)
+    READ(9,*) mito_initCaTnC
     READ(9,*)
     READ(9,*) startT,endT,Tstep,ODE_TIME_STEP
     READ(9,*) 
@@ -240,6 +245,13 @@ PROGRAM CARDIAC_ECC
     WRITE(*,*) 'Mito Diff Coeff in x = ',mitoCaDiffx
     WRITE(*,*) 'Mito Diff Coeff in y = ',mitoCaDiffy
     WRITE(*,*) 'Mito Diff Coeff in z = ',mitoCaDiffz
+    WRITE(*,*) 'Mito Diff Coeff in x = ',mitoFDiffx
+    WRITE(*,*) 'Mito Diff Coeff in y = ',mitoFDiffy
+    WRITE(*,*) 'Mito Diff Coeff in z = ',mitoFDiffz
+    WRITE(*,*) 'Mito Diff Coeff in x = ',mitoFCaDiffx
+    WRITE(*,*) 'Mito Diff Coeff in y = ',mitoFCaDiffy
+    WRITE(*,*) 'Mito Diff Coeff in z = ',mitoFCaDiffz
+
 
     WRITE(*,*) 'Initial [Ca]mito = ',mito_initCa
     WRITE(*,*) 'Initial [F]mito = ',mito_initF
@@ -736,11 +748,11 @@ PROGRAM CARDIAC_ECC
         IF(ELEM_LABEL.EQ.MITO_REGION_MARKER) THEN
           !element based assignment of diffusion properties
           CALL CMISSField_ParameterSetUpdateElement(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoCaDiffx,Err)
+            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoFDiffx,Err)
           CALL CMISSField_ParameterSetUpdateElement(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoCaDiffy,Err)
+            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoFDiffy,Err)
           CALL CMISSField_ParameterSetUpdateElement(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoCaDiffz,Err)
+            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoFDiffz,Err)
         ELSE
           CALL CMISSField_ParameterSetUpdateElement(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
             & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,fDiffx,Err)
@@ -841,11 +853,11 @@ PROGRAM CARDIAC_ECC
         IF(ELEM_LABEL.EQ.MITO_REGION_MARKER) THEN
           !element based assignment of diffusion properties
           CALL CMISSField_ParameterSetUpdateElement(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoCaDiffx,Err)
+            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoFCaDiffx,Err)
           CALL CMISSField_ParameterSetUpdateElement(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoCaDiffy,Err)
+            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoFCaDiffy,Err)
           CALL CMISSField_ParameterSetUpdateElement(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoCaDiffz,Err)
+            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoFCaDiffz,Err)
         ELSE
           CALL CMISSField_ParameterSetUpdateElement(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
             & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,fcaDiffx,Err)
@@ -1220,87 +1232,87 @@ CALL CMISSField_ParameterSetUpdateFinish(CellMLIntermediateField,CMISS_FIELD_U_V
   CALL CMISSSolverEquations_BoundaryConditionsCreateStart(SolverEquations,BoundaryConditions,Err)
 
   !Set 0 conc. bc on nodes within mitos
-  IF(WITH_MITO_ELEMENTS.EQ.1) THEN
-    DO node=1,NUMBER_OF_NODES
-      NODE_NUMBER = NodeNums(node,1)
-      IF(NodeNums(node,2).EQ.MITO_REGION_MARKER) THEN
-        CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
-        IF(NodeDomain==ComputationalNodeNumber) THEN
-          CONDITION = CMISS_BOUNDARY_CONDITION_FIXED
-          VALUE=0.0_CMISSDP
-          CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaField, &
-            & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
-            & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
+  !IF(WITH_MITO_ELEMENTS.EQ.1) THEN
+  !  DO node=1,NUMBER_OF_NODES
+  !    NODE_NUMBER = NodeNums(node,1)
+  !    IF(NodeNums(node,2).EQ.MITO_REGION_MARKER) THEN
+  !      CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+  !      IF(NodeDomain==ComputationalNodeNumber) THEN
+  !        CONDITION = CMISS_BOUNDARY_CONDITION_FIXED
+  !        VALUE=0.0_CMISSDP
+  !        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaField, &
+  !          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+  !          & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
 
-          CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FField, &
-            & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
-            & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
+   !       CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FField, &
+   !         & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+   !         & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
 
-          CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FCaField, &
-            & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
-            & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
-        ENDIF
-      ENDIF
-    ENDDO
-  ENDIF
+    !      CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FCaField, &
+    !        & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+    !        & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
+     !   ENDIF
+     ! ENDIF
+    !ENDDO
+  !ENDIF
   !set no flux bc if node is a mito boundary node.
 
-  IF(WITH_MITO_ELEMENTS.EQ.1) THEN
-    DO node=1,NUMBER_OF_MITOBDFACENODES
-      NODE_NUMBER = MITOBDFaceNodes(node)
-      CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
-      IF(NodeDomain==ComputationalNodeNumber) THEN
-        CONDITION = CMISS_BOUNDARY_CONDITION_FIXED
-        VALUE=0.0_CMISSDP
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaField, &
-          & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
-          & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
+  !IF(WITH_MITO_ELEMENTS.EQ.1) THEN
+  !  DO node=1,NUMBER_OF_MITOBDFACENODES
+  !    NODE_NUMBER = MITOBDFaceNodes(node)
+  !    CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+  !    IF(NodeDomain==ComputationalNodeNumber) THEN
+  !      CONDITION = CMISS_BOUNDARY_CONDITION_FIXED
+  !      VALUE=0.0_CMISSDP
+  !      CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaField, &
+  !        & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+  !        & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)!
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FField, &
-          & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
-          & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
+  !      CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FField, &
+   !       & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+   !       & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FCaField, &
-          & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
-          & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
+  !      CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FCaField, &
+ !         & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+ !         & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
         !make sure to unset mito bd node bcs to be free from dirchlet bcs set above.
 
-        CONDITION = CMISS_BOUNDARY_CONDITION_FREE
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
-          & NODE_NUMBER,1,CONDITION,init_Ca,Err) !(neumann boundary condition - no flux)
+!        CONDITION = CMISS_BOUNDARY_CONDITION_FREE
+!        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaField, &
+!          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+!          & NODE_NUMBER,1,CONDITION,init_Ca,Err) !(neumann boundary condition - no flux)
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
-          & NODE_NUMBER,1,CONDITION,init_F,Err) !(neumann boundary condition - no flux)
+ !       CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FField, &
+ !         & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+ !         & NODE_NUMBER,1,CONDITION,init_F,Err) !(neumann boundary condition - no flux)
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FCaField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
-          & NODE_NUMBER,1,CONDITION,init_FCa,Err) !(neumann boundary condition - no flux)
+ !       CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FCaField, &
+ !         & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+ !         & NODE_NUMBER,1,CONDITION,init_FCa,Err) !(neumann boundary condition - no flux)
 
         !Set the initial conc. at these mito boundary nodes to be the cytosolic versions
-        CALL CMISSField_ParameterSetUpdateNode(CaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_Ca,Err)
+ !       CALL CMISSField_ParameterSetUpdateNode(CaField,CMISS_FIELD_U_VARIABLE_TYPE, &
+ !         & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_Ca,Err)
 
-        CALL CMISSField_ParameterSetUpdateNode(FField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_F,Err)
+ !       CALL CMISSField_ParameterSetUpdateNode(FField,CMISS_FIELD_U_VARIABLE_TYPE, &
+ !         & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_F,Err)
 
-        CALL CMISSField_ParameterSetUpdateNode(FCaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_FCa,Err)
+ !       CALL CMISSField_ParameterSetUpdateNode(FCaField,CMISS_FIELD_U_VARIABLE_TYPE, &
+ !         & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_FCa,Err)
 
-      ENDIF
-    ENDDO
-    CALL CMISSField_ParameterSetUpdateStart(CaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(CaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+ !     ENDIF
+ !   ENDDO
+ !   CALL CMISSField_ParameterSetUpdateStart(CaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+ !   CALL CMISSField_ParameterSetUpdateFinish(CaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
-    CALL CMISSField_ParameterSetUpdateStart(FField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(FField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+ !   CALL CMISSField_ParameterSetUpdateStart(FField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  !  CALL CMISSField_ParameterSetUpdateFinish(FField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
-    CALL CMISSField_ParameterSetUpdateStart(FCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(FCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+ !   CALL CMISSField_ParameterSetUpdateStart(FCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+ !   CALL CMISSField_ParameterSetUpdateFinish(FCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
-  ENDIF
+  !  ENDIF
 
   !Set no flux on cell boundary
   DO node=1,NUMBER_OF_CELLBDNODES
