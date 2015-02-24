@@ -5,11 +5,11 @@
   </component>
 
   <component name="CaMBuffer">
-    <variable initial_value="0.1" name="CaMOnRate" units="peruMms"/>
-    <variable initial_value="0.11" name="CaMOffRate" units="perms"/>
-    <variable initial_value="2.08" name="CaMCa" public_interface="out" units="uM"/>
+    <variable initial_value="0.034" name="CaMOnRate" units="peruMms"/>
+    <variable initial_value="0.238" name="CaMOffRate" units="perms"/>
+    <variable initial_value="0.471" name="CaMCa" public_interface="out" units="uM"/>
     <variable name="Ca_free" public_interface="in" units="uM"/>
-    <variable initial_value="22.92" name="CaM_free" units="uM"/>
+    <variable initial_value="23.529" name="CaM_free" units="uM"/>
     <variable name="JCaM" public_interface="out" units="uMperms"/>
     <variable name="time" public_interface="in" units="ms"/><variable name="CaMTotal" units="uM"/>
     <math xmlns="http://www.w3.org/1998/Math/MathML"><apply><eq/><ci>JCaM</ci><apply><plus/><apply><times/><apply><minus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn></apply><ci>CaMOnRate</ci><ci>Ca_free</ci><ci>CaM_free</ci></apply><apply><times/><ci>CaMOffRate</ci><ci>CaMCa</ci></apply></apply></apply>
@@ -119,9 +119,21 @@
     <variable name="JATP" public_interface="in" units="uMperms"/>
     <variable name="JCaM" public_interface="in" units="uMperms"/>
     <variable name="Jfluo" public_interface="in" units="uMperms"/>
-
-    <math xmlns="http://www.w3.org/1998/Math/MathML"><apply><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>Ca_free</ci></apply><apply><plus/><ci>Jryr</ci><ci>Jtnc</ci><ci>Jfluo</ci></apply></apply></math>
     <variable name="time" public_interface="in" units="ms"/>
+
+    <math xmlns="http://www.w3.org/1998/Math/MathML">
+      <apply>
+         <eq/>
+         <apply>
+           <diff/>
+           <bvar><ci>time</ci></bvar><ci>Ca_free</ci>
+         </apply>
+         <apply>
+            <plus/>
+            <ci>Jryr</ci><ci>Jtnc</ci><ci>Jfluo</ci><ci>JATP</ci><ci>JCaM</ci>
+         </apply>
+      </apply>
+    </math>
     
   </component>
 
@@ -135,15 +147,17 @@
 </component>
 
   <component name="ATPBuffer">
-  <variable initial_value="0.1" name="ATPOnRate" units="peruMms"/>
-  <variable initial_value="0.11" name="ATPOffRate" units="perms"/>
-  <variable initial_value="2.08" name="ATPCa" public_interface="out" units="uM"/>
+  <variable initial_value="0.225" name="ATPOnRate" units="peruMms"/>
+  <variable initial_value="45.0" name="ATPOffRate" units="perms"/>
+  <variable initial_value="0.318" name="ATPCa" public_interface="out" units="uM"/>
   <variable name="Ca_free" public_interface="in" units="uM"/>
-  <variable initial_value="22.92" name="ATP_free" units="uM"/>
+  <variable initial_value="454.682" name="ATP_free" units="uM"/>
   <variable name="JATP" public_interface="out" units="uMperms"/>
+  <variable name="time" public_interface="in" units="ms"/>
+  <variable name="ATPTotal" units="uM"/>
   <math xmlns="http://www.w3.org/1998/Math/MathML"><apply><eq/><ci>JATP</ci><apply><plus/><apply><times/><apply><minus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn></apply><ci>ATPOnRate</ci><ci>Ca_free</ci><ci>ATP_free</ci></apply><apply><times/><ci>ATPOffRate</ci><ci>ATPCa</ci></apply></apply></apply>
     <apply><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>ATPCa</ci></apply><apply><minus/><ci>JATP</ci></apply></apply>
-  </math><variable name="time" public_interface="in" units="ms"/><variable name="ATPTotal" units="uM"/>
+  </math>
   <math xmlns="http://www.w3.org/1998/Math/MathML">
     <apply><eq/><ci>ATPTotal</ci><apply><plus/><ci>ATPCa</ci><ci>ATP_free</ci></apply></apply>
   </math>
