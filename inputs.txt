@@ -28,21 +28,21 @@
 #initial distribution of CaTnC - homogenous through myofibril region
 10.0
 #init_mitoCa,mitoCaDiffx,mitoCaDiffy,mitoCaDiffz - used if WITH_MITO_ELEMENTS=1
-0.1,0.22,0.22,0.22
+0,0,0,0
 #mitoF
-22.92,0.042,0.042,0.042
+0,0,0,0
 #mitoFCa
-2.08,0.042,0.042,0.042
-#CaM
 0,0,0,0
-#CaMCa
+#mitoCaM
 0,0,0,0
-#ATP
+#nitoCaMCa
 0,0,0,0
-#ATPCa
+#mitoATP
+0,0,0,0
+#mitoATPCa
 0,0,0,0
 #mito_initCaTnC
-10.0
+0.0
 #Tstart,Tend,Tstep,ODESTEP
 0.0,30.0,0.1,0.0001
 #file output frequency
