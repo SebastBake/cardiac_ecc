@@ -177,7 +177,7 @@ PROGRAM CARDIAC_ECC
     & mitoFDiffx,mitoFDiffy,mitoFDiffz,mitoFCaDiffx,mitoFCaDiffy,mitoFCaDiffz,init_CaM,init_ATP,init_CaMCa,init_ATPCa, &
     & mitoCaMDiffx,mitoCaMDiffy,mitoCaMDiffz,mitoCaMCaDiffx,mitoCaMCaDiffy,mitoCaMCaDiffz,mitoATPDiffx,mitoATPDiffy,mitoATPDiffz, &
     & mitoATPCaDiffx,mitoATPCaDiffy,mitoATPCaDiffz,CaMDiffx, CaMDiffy,CaMDiffz,CaMCaDiffx, CaMCaDiffy,CaMCaDiffz, &
-    & ATPDiffx, ATPDiffy,ATPDiffz,ATPCaDiffx, ATPCaDiffy,ATPCaDiffz
+    & ATPDiffx, ATPDiffy,ATPDiffz,ATPCaDiffx, ATPCaDiffy,ATPCaDiffz,mito_initCaM, mito_initCaMCa,mito_initATP, mito_initATPCa
   INTEGER(CMISSIntg) :: NumRyRsPerCluster,NonZeroNodes,MITOBDFaceNode_idx,NUMBER_OF_MITOBDFACES
   CHARACTER(250) :: CELLID,NODEFILE,ELEMFILE,CELLPATH,RyRModel,RYRDENSITYFILE,MITOBDFACEFILE,CELLBDNODESFILE
   INTEGER(CMISSIntg) :: NumberOfComputationalNodes,ComputationalNodeNumber,NodeDomain,ElementDomain
@@ -252,7 +252,7 @@ PROGRAM CARDIAC_ECC
     READ(9,*)
     READ(9,*) mito_initCaMCa,mitoCaMCaDiffx,mitoCaMCaDiffy,mitoCaMCaDiffz
     READ(9,*)
-    READ(9,*) mito_initATP,mitoATPDiffx,mitoFATPDiffy,mitoATPDiffz
+    READ(9,*) mito_initATP,mitoATPDiffx,mitoATPDiffy,mitoATPDiffz
     READ(9,*)
     READ(9,*) mito_initATPCa,mitoATPCaDiffx,mitoATPCaDiffy,mitoATPCaDiffz
     READ(9,*)
