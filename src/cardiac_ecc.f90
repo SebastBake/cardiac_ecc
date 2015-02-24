@@ -1436,6 +1436,9 @@ PROGRAM CARDIAC_ECC
   CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"CRU/Jryr",Err)
   CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"FluoBuffer/Jfluo",Err)
   CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"TnCBuffer/Jtnc",Err)
+  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"TnCBuffer/JATP",Err)
+  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"TnCBuffer/JCaM",Err)
+
   !Finish the CellML environment
   CALL CMISSCellML_CreateFinish(CellML,Err)
 
@@ -1484,6 +1487,30 @@ PROGRAM CARDIAC_ECC
     & ryrModelIndex,"TnCBuffer/CaTnC",CMISS_FIELD_VALUES_SET_TYPE,Err)
   CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"TnCBuffer/CaTnC",CMISS_FIELD_VALUES_SET_TYPE, &
     & CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+
+  !Mapping CaM
+  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaMField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"CaMBuffer/CaM",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CaMBuffer/CaM",CMISS_FIELD_VALUES_SET_TYPE, &
+    & CaMField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+
+  !Mapping CaMCa
+  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"CaMBuffer/CaMCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CaMBuffer/CaMCa",CMISS_FIELD_VALUES_SET_TYPE, &
+    & CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+
+  !Mapping ATP
+  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,ATPField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"ATPBuffer/ATP",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"ATPBuffer/ATP",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ATPField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+
+  !Mapping ATPCa
+  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"ATPBuffer/ATPCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"ATPBuffer/ATPCa",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
   !Finish the creation of CellML <--> OpenCMISS field maps
   CALL CMISSCellML_FieldMapsCreateFinish(CellML,Err)
