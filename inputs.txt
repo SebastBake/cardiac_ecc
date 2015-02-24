@@ -17,6 +17,14 @@
 22.92,0.042,0.042,0.042
 #init_F3Ca,f3caDiffx,f3caDiffy,f3caDiffz
 2.08,0.042,0.042,0.042
+#CaM
+23.529,0.025,0.025,0.025
+#CaMCa
+0.471,0.025,0.025,0.025
+#ATP
+454.682,0.14,0.14,0.14
+#ATPCa
+0.318,0.14,0.14,0.14
 #initial distribution of CaTnC - homogenous through myofibril region
 10.0
 #init_mitoCa,mitoCaDiffx,mitoCaDiffy,mitoCaDiffz - used if WITH_MITO_ELEMENTS=1
@@ -25,6 +33,14 @@
 22.92,0.042,0.042,0.042
 #mitoFCa
 2.08,0.042,0.042,0.042
+#CaM
+0,0,0,0
+#CaMCa
+0,0,0,0
+#ATP
+0,0,0,0
+#ATPCa
+0,0,0,0
 #mito_initCaTnC
 10.0
 #Tstart,Tend,Tstep,ODESTEP
