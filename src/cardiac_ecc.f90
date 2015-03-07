@@ -71,13 +71,15 @@ PROGRAM CARDIAC_ECC
   INTEGER(CMISSIntg), PARAMETER :: CaMaterialsFieldUserNumber=8
   INTEGER(CMISSIntg), PARAMETER :: CaFieldUserNumber=9
   INTEGER(CMISSIntg), PARAMETER :: CaEquationsSetFieldUserNumber=10
-  INTEGER(CMISSIntg), PARAMETER :: iCaFieldUserNumber=11
+  INTEGER(CMISSIntg), PARAMETER :: PopenFieldUserNumber=11
 
 
 
   INTEGER(CMISSIntg), PARAMETER :: CaTnCFieldUserNumber=13
   INTEGER(CMISSIntg), PARAMETER :: RyRDenseFieldUserNumber=16
   INTEGER(CMISSIntg), PARAMETER :: RyRReleaseLagFieldUserNumber=34
+  INTEGER(CMISSIntg), PARAMETER :: CaDyadFieldUserNumber=54
+  INTEGER(CMISSIntg), PARAMETER :: CaJSRFieldUserNumber=55
 
 
   INTEGER(CMISSIntg), PARAMETER :: FCaEquationsSetUserNumber=24
@@ -152,7 +154,7 @@ PROGRAM CARDIAC_ECC
   TYPE(CMISSCellMLType) :: CellML
   TYPE(CMISSCellMLEquationsType) :: CellMLEquations
   TYPE(CMISSFieldType) :: CellMLModelsField,CellMLStateField,CellMLIntermediateField,CellMLParametersField
-  TYPE(CMISSFieldType) :: iCaField,CaTnCField,RyRDenseField,iFCaField,iFField,RyRReleaseLagField
+  TYPE(CMISSFieldType) :: PopenField,CaTnCField,RyRDenseField,iFCaField,iFField,RyRReleaseLagField,CaJSRField,CaDyadField
   TYPE(CMISSFieldType) :: iCaMField,iCaMCaField,iATPField,iATPCaField
 
   !Defining program-specific fortran variables
@@ -177,8 +179,9 @@ PROGRAM CARDIAC_ECC
     & NodeRyRDensity,mitoCaDiffx,mitoCaDiffy,mitoCaDiffz,mito_initCa,mito_initF, mito_initFCa,mito_initCaTnC,&
     & mitoFDiffx,mitoFDiffy,mitoFDiffz,mitoFCaDiffx,mitoFCaDiffy,mitoFCaDiffz,init_CaM,init_ATP,init_CaMCa,init_ATPCa, &
     & mitoCaMDiffx,mitoCaMDiffy,mitoCaMDiffz,mitoCaMCaDiffx,mitoCaMCaDiffy,mitoCaMCaDiffz,mitoATPDiffx,mitoATPDiffy,mitoATPDiffz, &
-    & mitoATPCaDiffx,mitoATPCaDiffy,mitoATPCaDiffz,CaMDiffx, CaMDiffy,CaMDiffz,CaMCaDiffx, CaMCaDiffy,CaMCaDiffz, &
-    & ATPDiffx, ATPDiffy,ATPDiffz,ATPCaDiffx, ATPCaDiffy,ATPCaDiffz,mito_initCaM, mito_initCaMCa,mito_initATP, mito_initATPCa
+    & mitoATPCaDiffx,mitoATPCaDiffy,mitoATPCaDiffz,CaMDiffx, CaMDiffy,CaMDiffz,CaMCaDiffx, CaMCaDiffy,CaMCaDiffz, init_Popen, &
+    & ATPDiffx, ATPDiffy,ATPDiffz,ATPCaDiffx, ATPCaDiffy,ATPCaDiffz,mito_initCaM, mito_initCaMCa,mito_initATP, mito_initATPCa, &
+    & init_CaDyad,init_CaJSR,mito_initCaJSR,mito_initCaDyad
   INTEGER(CMISSIntg) :: NumRyRsPerCluster,NonZeroNodes,MITOBDFaceNode_idx,NUMBER_OF_MITOBDFACES
   CHARACTER(250) :: CELLID,NODEFILE,ELEMFILE,CELLPATH,RyRModel,RYRDENSITYFILE,MITOBDFACEFILE,CELLBDNODESFILE
   INTEGER(CMISSIntg) :: NumberOfComputationalNodes,ComputationalNodeNumber,NodeDomain,ElementDomain
@@ -227,7 +230,7 @@ PROGRAM CARDIAC_ECC
     READ(9,*)
     READ(9,*) RyRModel,MODEL_ON
     READ(9,*)
-    READ(9,*) init_Ca,caDiffx,caDiffy,caDiffz,iCa
+    READ(9,*) init_Ca,caDiffx,caDiffy,caDiffz,init_Popen
     READ(9,*)
     READ(9,*) init_F,fDiffx,fDiffy,fDiffz
     READ(9,*)
@@ -241,7 +244,7 @@ PROGRAM CARDIAC_ECC
     READ(9,*)
     READ(9,*) init_ATPCa,ATPCaDiffx,ATPCaDiffy,ATPCaDiffz
     READ(9,*)
-    READ(9,*) init_CaTnC
+    READ(9,*) init_CaTnC,init_CaDyad,init_CaJSR
     READ(9,*)
     READ(9,*) mito_initCa,mitoCaDiffx,mitoCaDiffy,mitoCaDiffz
     READ(9,*)
@@ -257,7 +260,7 @@ PROGRAM CARDIAC_ECC
     READ(9,*)
     READ(9,*) mito_initATPCa,mitoATPCaDiffx,mitoATPCaDiffy,mitoATPCaDiffz
     READ(9,*)
-    READ(9,*) mito_initCaTnC
+    READ(9,*) mito_initCaTnC,mito_initCaDyad,mito_initCaJSR,
     READ(9,*)
     READ(9,*) startT,endT,Tstep,ODE_TIME_STEP
     READ(9,*) 
@@ -280,7 +283,7 @@ PROGRAM CARDIAC_ECC
   WRITE(*,*) 'Ca Diff Coeff in x = ',caDiffx
   WRITE(*,*) 'Ca Diff Coeff in y = ',caDiffy
   WRITE(*,*) 'Ca Diff Coeff in z = ',caDiffz
-  WRITE(*,*) 'RyR Ca release current = ',iCa
+  WRITE(*,*) 'RyR open probability = ',init_Popen
   WRITE(*,*) 'Initial [F]i = ',init_F 
   WRITE(*,*) 'F Diff Coeff in x = ',fDiffx
   WRITE(*,*) 'F Diff Coeff in y = ',fDiffy
@@ -627,18 +630,18 @@ PROGRAM CARDIAC_ECC
 
  
   !Set up source field for reaction diffusion equation set. Note that for the split problem subtype, the source field is not used at all.
-  !iCaField
-  !Might use the field for CellML input of elementary RyR calcium release
-  CALL CMISSField_Initialise(iCaField,Err)
-  CALL CMISSEquationsSet_SourceCreateStart(CaEquationsSet,iCaFieldUserNumber,iCaField,Err)
-  CALL CMISSField_VariableLabelSet(iCaField,CMISS_FIELD_U_VARIABLE_TYPE,"iCa Field",Err)
-  !CALL CMISSField_ComponentInterpolationSet(iCaField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+  !PopenField
+  !using the field for CellML input of initial P_open
+  CALL CMISSField_Initialise(PopenField,Err)
+  CALL CMISSEquationsSet_SourceCreateStart(CaEquationsSet,PopenFieldUserNumber,PopenField,Err)
+  CALL CMISSField_VariableLabelSet(PopenField,CMISS_FIELD_U_VARIABLE_TYPE,"Popen Field",Err)
+  !CALL CMISSField_ComponentInterpolationSet(PopenField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
   !  & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
   !Finish the equations set source field variables
   CALL CMISSEquationsSet_SourceCreateFinish(CaEquationsSet,Err)
-  !Initialising the iCaField to zero everywhere. Modifying for RyRs in a later loop.
-  CALL CMISSField_ComponentValuesInitialise(iCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
-    & 1,iCa,Err)
+  !Initialising the PopenField to zero everywhere. Modifying for RyRs in a later loop.
+  CALL CMISSField_ComponentValuesInitialise(PopenField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    & 1,init_Popen,Err)
 
 !###################
   !RyRDenseField and RyRReleaseLagField
@@ -941,7 +944,7 @@ PROGRAM CARDIAC_ECC
   CALL CMISSField_VariableLabelSet(iFCaField,CMISS_FIELD_U_VARIABLE_TYPE,"iFCa Field",Err)
   !Finish the equations set source field variables
   CALL CMISSEquationsSet_SourceCreateFinish(FCaEquationsSet,Err)
-  !Initialising the iCaField to zero everywhere. Modifying for RyRs in a later loop.
+  !Initialising the iFCaField to zero everywhere. Modifying for RyRs in a later loop.
   CALL CMISSField_ComponentValuesInitialise(iFCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
     & 1,0.0_CMISSDP,Err)
 
@@ -1047,7 +1050,7 @@ PROGRAM CARDIAC_ECC
    CALL CMISSField_VariableLabelSet(iCaMField,CMISS_FIELD_U_VARIABLE_TYPE,"iCaM Field",Err)
    !Finish the equations set source field variables
    CALL CMISSEquationsSet_SourceCreateFinish(CaMEquationsSet,Err)
-   !Initialising the iCaField to zero everywhere. Modifying for RyRs in a later loop.
+   !Initialising the iCAMCaField to zero everywhere. Modifying for RyRs in a later loop.
    CALL CMISSField_ComponentValuesInitialise(iCaMField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
      & 1,0.0_CMISSDP,Err)
 
@@ -1153,7 +1156,7 @@ PROGRAM CARDIAC_ECC
   CALL CMISSField_VariableLabelSet(iCaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,"iCaMCa Field",Err)
   !Finish the equations set source field variables
   CALL CMISSEquationsSet_SourceCreateFinish(CaMCaEquationsSet,Err)
-  !Initialising the iCaField to zero everywhere. Modifying for RyRs in a later loop.
+  !Initialising the iCaMCaField to zero everywhere. Modifying for RyRs in a later loop.
   CALL CMISSField_ComponentValuesInitialise(iCaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
     & 1,0.0_CMISSDP,Err)
 
@@ -1259,7 +1262,7 @@ PROGRAM CARDIAC_ECC
   CALL CMISSField_VariableLabelSet(iATPField,CMISS_FIELD_U_VARIABLE_TYPE,"iATP Field",Err)
   !Finish the equations set source field variables
   CALL CMISSEquationsSet_SourceCreateFinish(ATPEquationsSet,Err)
-  !Initialising the iCaField to zero everywhere. Modifying for RyRs in a later loop.
+  !Initialising the iATPField to zero everywhere. Modifying for RyRs in a later loop.
   CALL CMISSField_ComponentValuesInitialise(iATPField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
     & 1,0.0_CMISSDP,Err)
 
@@ -1365,7 +1368,7 @@ PROGRAM CARDIAC_ECC
   CALL CMISSField_VariableLabelSet(iATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,"iATPCa Field",Err)
   !Finish the equations set source field variables
   CALL CMISSEquationsSet_SourceCreateFinish(ATPCaEquationsSet,Err)
-  !Initialising the iCaField to zero everywhere. Modifying for RyRs in a later loop.
+  !Initialising the iATPCaField to zero everywhere. Modifying for RyRs in a later loop.
   CALL CMISSField_ComponentValuesInitialise(iATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
     & 1,0.0_CMISSDP,Err)
 
@@ -1415,7 +1418,64 @@ PROGRAM CARDIAC_ECC
     CALL CMISSField_ParameterSetUpdateStart(CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
     CALL CMISSField_ParameterSetUpdateFinish(CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
-  ENDIF  
+  ENDIF
+
+!################################
+  !CaDyad
+!################################
+  !set up CaDyad field
+  CALL CMISSField_Initialise(CaDyadField,Err)
+  CALL CMISSField_CreateStart(CaDyadFieldUserNumber,Region,CaDyadField,Err)
+  CALL CMISSField_TypeSet(CaDyadField,CMISS_FIELD_GENERAL_TYPE,Err)
+  CALL CMISSField_MeshDecompositionSet(CaDyadField,Decomposition,Err)
+  CALL CMISSField_GeometricFieldSet(CaDyadField,GeometricField,Err)
+  CALL CMISSField_NumberOfVariablesSet(CaDyadField,1,Err)
+  CALL CMISSField_VariableTypesSet(CaDyadField,[CMISS_FIELD_U_VARIABLE_TYPE],Err)
+  CALL CMISSField_DataTypeSet(CaDyadField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_DP_TYPE,Err)
+  CALL CMISSField_DimensionSet(CaDyadField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_SCALAR_DIMENSION_TYPE,Err)
+  CALL CMISSField_NumberOfComponentsSet(CaDyadField,CMISS_FIELD_U_VARIABLE_TYPE,1,Err)
+  CALL CMISSField_VariableLabelSet(CaDyadField,CMISS_FIELD_U_VARIABLE_TYPE,"CaDyad Field",Err)
+  CALL CMISSField_ComponentMeshComponentGet(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE, &
+    & 1,GeometricMeshComponent,ERR)
+  !Default to the geometric interpolation setup
+  CALL CMISSField_ComponentMeshComponentSet(CaDyadField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+    & GeometricMeshComponent,ERR)
+  !Specify the interpolation to be same as geometric interpolation
+  CALL CMISSField_ComponentInterpolationSet(CaDyadField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+    & CMISS_FIELD_NODE_BASED_INTERPOLATION,ERR)
+  CALL CMISSField_CreateFinish(CaDyadField,Err)
+  CALL CMISSField_ComponentValuesInitialise(CaDyadField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    & 1,init_CaDyad,Err)
+
+
+
+  !################################
+  !CaJSR
+  !################################
+  !set up CaJSR field
+  CALL CMISSField_Initialise(CaJSRField,Err)
+  CALL CMISSField_CreateStart(CaJSRFieldUserNumber,Region,CaJSRField,Err)
+  CALL CMISSField_TypeSet(CaJSRField,CMISS_FIELD_GENERAL_TYPE,Err)
+  CALL CMISSField_MeshDecompositionSet(CaJSRField,Decomposition,Err)
+  CALL CMISSField_GeometricFieldSet(CaJSRField,GeometricField,Err)
+  CALL CMISSField_NumberOfVariablesSet(CaJSRField,1,Err)
+  CALL CMISSField_VariableTypesSet(CaJSRField,[CMISS_FIELD_U_VARIABLE_TYPE],Err)
+  CALL CMISSField_DataTypeSet(CaJSRField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_DP_TYPE,Err)
+  CALL CMISSField_DimensionSet(CaJSRField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_SCALAR_DIMENSION_TYPE,Err)
+  CALL CMISSField_NumberOfComponentsSet(CaJSRField,CMISS_FIELD_U_VARIABLE_TYPE,1,Err)
+  CALL CMISSField_VariableLabelSet(CaJSRField,CMISS_FIELD_U_VARIABLE_TYPE,"CaJSR Field",Err)
+  CALL CMISSField_ComponentMeshComponentGet(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE, &
+    & 1,GeometricMeshComponent,ERR)
+  !Default to the geometric interpolation setup
+  CALL CMISSField_ComponentMeshComponentSet(CaJSRField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+    & GeometricMeshComponent,ERR)
+  !Specify the interpolation to be same as geometric interpolation
+  CALL CMISSField_ComponentInterpolationSet(CaJSRField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+    & CMISS_FIELD_NODE_BASED_INTERPOLATION,ERR)
+  CALL CMISSField_CreateFinish(CaJSRField,Err)
+  CALL CMISSField_ComponentValuesInitialise(CaJSRField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    & 1,init_CaJSR,Err)
+
 !_____________________________________________________________________________________________________________________
   !Start to set up CellML Fields
 
@@ -1427,18 +1487,17 @@ PROGRAM CARDIAC_ECC
   ! set iCa as known so that it can be set as spatially varying in opencmiss.
   !CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/iCa",Err)
   ! set RyRDensity as known so that it can be set as spatially varying in opencmiss.
-  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/iCa",Err)
-  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/ryrDensity",Err)
-  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/timelag",Err)
+  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"Dyad/NumRyRsPerCluster",Err)
+  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"Dyad/lag_lcc",Err)
 
   !to get from the CellML side. variables in cellml model that are not state variables, but are dependent on independent and state variables. 
   !- components of intermediate field
   !fluxes of the different buffers and CaRUs that I want to get out as intermediate variables
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"CRU/Jryr",Err)
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"FluoBuffer/Jfluo",Err)
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"TnCBuffer/Jtnc",Err)
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"ATPBuffer/JATP",Err)
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"CaMBuffer/JCaM",Err)
+  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Dyad/Jryr",Err)
+  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Cytoplasm/J_fluo",Err)
+  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Cytoplasn/J_tnc",Err)
+  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Cytoplasm/JATP",Err)
+  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Cytoplasm/JCaM",Err)
 
   !Finish the CellML environment
   CALL CMISSCellML_CreateFinish(CellML,Err)
@@ -1447,71 +1506,85 @@ PROGRAM CARDIAC_ECC
   !Mapping free calcium in opencmiss to that in cellml.
   CALL CMISSCellML_FieldMapsCreateStart(CellML,Err)
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CRU/Ca_free",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/Ca_free",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Cytoplasm/Ca_cyto",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Cytoplasm/Ca_cyto",CMISS_FIELD_VALUES_SET_TYPE, &
     & CaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
-   !Mapping iCaField to iCa in the cellml model
-  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,iCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CRU/iCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/iCa",CMISS_FIELD_VALUES_SET_TYPE, &
-    & iCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+   !Mapping PopenField to P_open in the cellml model
+  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,PopenField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Dyad/P_open",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Dyad/P_open",CMISS_FIELD_VALUES_SET_TYPE, &
+    & PopenField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
-   !Mapping RyRDenseField to RyRDensity in the cellml model
+   !Mapping RyRDenseField to NumRyR in the cellml model
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CRU/ryrDensity",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/ryrDensity",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Dyad/NumRyR",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Dyad/NumRyR",CMISS_FIELD_VALUES_SET_TYPE, &
     & RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping RyRReleaseLagField to timelag in the cellml model
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CRU/timelag",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/timelag",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Dyad/lag_lcc",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Dyad/lag_lcc",CMISS_FIELD_VALUES_SET_TYPE, &
     & RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping Buffer-Complex resting values of cellml model to appropriate fields set up above
 
    !Mapping F
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,FField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"FluoBuffer/Fluo_free",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"FluoBuffer/Fluo_free",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Cytoplasm/Fluo_free",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Cytoplasm/Fluo_free",CMISS_FIELD_VALUES_SET_TYPE, &
     & FField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
    !Mapping FCa
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,FCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"FluoBuffer/FluoCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"FluoBuffer/FluoCa",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Cytoplasm/FluoCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Cytoplasm/FluoCa",CMISS_FIELD_VALUES_SET_TYPE, &
     & FCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
    !Mapping CaTnC
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"TnCBuffer/CaTnC",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"TnCBuffer/CaTnC",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Cytoplasm/CaTnC",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Cytoplasm/CaTnC",CMISS_FIELD_VALUES_SET_TYPE, &
     & CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping CaM
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaMField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CaMBuffer/CaM_free",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CaMBuffer/CaM_free",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Cytoplasm/CaM_free",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Cytoplasm/CaM_free",CMISS_FIELD_VALUES_SET_TYPE, &
     & CaMField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping CaMCa
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CaMBuffer/CaMCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CaMBuffer/CaMCa",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Cytoplasm/CaMCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Cytoplasm/CaMCa",CMISS_FIELD_VALUES_SET_TYPE, &
     & CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping ATP
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,ATPField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"ATPBuffer/ATP_free",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"ATPBuffer/ATP_free",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Cytoplasm/ATP_free",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Cytoplasm/ATP_free",CMISS_FIELD_VALUES_SET_TYPE, &
     & ATPField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping ATPCa
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"ATPBuffer/ATPCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"ATPBuffer/ATPCa",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Cytoplasm/ATPCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Cytoplasm/ATPCa",CMISS_FIELD_VALUES_SET_TYPE, &
     & ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+
+  !Mapping Ca_dyad
+  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaDyadField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Dyad/Ca_dyad",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Dyad/Ca_dyad",CMISS_FIELD_VALUES_SET_TYPE, &
+    & CaDyadField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+
+  !Mapping CaJSR
+  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaJSRField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Dyad/Ca_JSR",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Dyad/Ca_JSR",CMISS_FIELD_VALUES_SET_TYPE, &
+    & CaJSRField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+
+
 
   !Finish the creation of CellML <--> OpenCMISS field maps
   CALL CMISSCellML_FieldMapsCreateFinish(CellML,Err)
