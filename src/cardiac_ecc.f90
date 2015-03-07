@@ -260,7 +260,7 @@ PROGRAM CARDIAC_ECC
     READ(9,*)
     READ(9,*) mito_initATPCa,mitoATPCaDiffx,mitoATPCaDiffy,mitoATPCaDiffz
     READ(9,*)
-    READ(9,*) mito_initCaTnC,mito_initCaDyad,mito_initCaJSR,
+    READ(9,*) mito_initCaTnC,mito_initCaDyad,mito_initCaJSR
     READ(9,*)
     READ(9,*) startT,endT,Tstep,ODE_TIME_STEP
     READ(9,*) 
@@ -1487,7 +1487,7 @@ PROGRAM CARDIAC_ECC
   ! set iCa as known so that it can be set as spatially varying in opencmiss.
   !CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/iCa",Err)
   ! set RyRDensity as known so that it can be set as spatially varying in opencmiss.
-  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"Dyad/NumRyRsPerCluster",Err)
+  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"Dyad/NumRyR",Err)
   CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"Dyad/lag_lcc",Err)
 
   !to get from the CellML side. variables in cellml model that are not state variables, but are dependent on independent and state variables. 
