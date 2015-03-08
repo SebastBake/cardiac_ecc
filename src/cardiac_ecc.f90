@@ -1493,9 +1493,9 @@ PROGRAM CARDIAC_ECC
   !to get from the CellML side. variables in cellml model that are not state variables, but are dependent on independent and state variables. 
   !- components of intermediate field
   !fluxes of the different buffers and CaRUs that I want to get out as intermediate variables
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Dyad/Jryr",Err)
+  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Dyad/J_ryr",Err)
   CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Cytoplasm/J_fluo",Err)
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Cytoplasn/J_tnc",Err)
+  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Cytoplasm/J_tnc",Err)
   CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Cytoplasm/JATP",Err)
   CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"Cytoplasm/JCaM",Err)
 
@@ -1580,8 +1580,8 @@ PROGRAM CARDIAC_ECC
 
   !Mapping CaJSR
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaJSRField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"Dyad/Ca_JSR",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Dyad/Ca_JSR",CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"SR/Ca_jsr",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"SR/Ca_jsr",CMISS_FIELD_VALUES_SET_TYPE, &
     & CaJSRField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
 
@@ -1781,8 +1781,11 @@ PROGRAM CARDIAC_ECC
   !First solver is a DAE solver
   CALL CMISSSolver_Initialise(Solver,Err)
   CALL CMISSProblem_SolverGet(Problem,CMISS_CONTROL_LOOP_NODE,1,Solver,Err)
+  CALL CMISSSolver_DAESolverTypeSet(Solver,CMISS_SOLVER_DAE_BDF,Err)
+  CALL CMISSSolver_LibraryTypeSet(Solver,CMISS_SOLVER_PETSC_LIBRARY,Err)
   CALL CMISSSolver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err)
   CALL CMISSSolver_OutputTypeSet(Solver,CMISS_SOLVER_PROGRESS_OUTPUT,Err)
+
 
   !Second solver is the dynamic solver for solving the parabolic equation
   CALL CMISSSolver_Initialise(Solver,Err)
@@ -1805,6 +1808,8 @@ PROGRAM CARDIAC_ECC
   !Third solver is another DAE solver
   CALL CMISSSolver_Initialise(Solver,Err)
   CALL CMISSProblem_SolverGet(Problem,CMISS_CONTROL_LOOP_NODE,3,Solver,Err)
+  CALL CMISSSolver_DAESolverTypeSet(Solver,CMISS_SOLVER_DAE_BDF,Err)
+  CALL CMISSSolver_LibraryTypeSet(Solver,CMISS_SOLVER_PETSC_LIBRARY,Err)
   CALL CMISSSolver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err) !set the third solver's integration time step
   CALL CMISSSolver_OutputTypeSet(Solver,CMISS_SOLVER_PROGRESS_OUTPUT,Err)
   !CALL CMISSSolverOutputTypeSet(Solver,CMISSSolverTimingOutput,Err)
