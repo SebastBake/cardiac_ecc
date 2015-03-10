@@ -1802,7 +1802,7 @@ PROGRAM CARDIAC_ECC
   !CALL CMISSSolverLibraryTypeSet(LinearSolver,CMISSSolverCMISSLibrary,Err)
   !CALL CMISSSolverLinearTypeSet(LinearSolver,CMISSSolverLinearDirectSolveType,Err)
   !CALL CMISSSolverLibraryTypeSet(LinearSolver,CMISSSolverMUMPSLibrary,Err)
-  CALL CMISSSolver_LinearIterativeMaximumIterationsSet(LinearSolver,1000,Err)
+  CALL CMISSSolver_LinearIterativeMaximumIterationsSet(LinearSolver,10000,Err)
 
 
   !Third solver is another DAE solver
