@@ -378,7 +378,7 @@
         <variable name="Ca_cyto" public_interface="in" units="uM"/>
         <variable initial_value="0.1" name="Ca_dyad" units="uM"/>
         <variable initial_value="0" name="g_ilcc" units="Cpms"/>
-        <variable initial_value="4.0" name="g_ryr" units="pms"/>
+        <variable initial_value="0.1" name="g_ryr" units="pms"/>
         <variable initial_value="0.0" name="lag_lcc" units="ms"/>
         <variable initial_value="0.5" name="t_lcc" units="ms"/>
         <variable name="i_lcc" units="Cpms"/>
@@ -387,7 +387,7 @@
         <variable initial_value="9.6485e4" name="F" units="Cpmol"/>
         <variable name="I_ryr" units="pA"/>
         <variable name="J_cyto" public_interface="out" units="uMpms"/>
-        <variable initial_value="1" name="g_cyto" units="pms"/>
+        <variable initial_value="7" name="g_cyto" units="pms"/>
         <variable name="koc_ryr" units="pms"/>
         <variable name="kco_ryr" units="pms"/>
         <variable initial_value="1" name="k_coop" units="dimensionless"/>
@@ -666,7 +666,7 @@
         <variable initial_value="3.78e-21" name="V_jsr" public_interface="out" units="m3"/>
         <variable name="J_ryr" public_interface="in" units="uMpms"/>
         <variable name="J_refill" public_interface="out" units="uMpms"/>
-        <variable initial_value="0.0005" name="g_refill" public_interface="out" units="pms"/>
+        <variable initial_value="0.01" name="g_refill" public_interface="out" units="pms"/>
         <variable name="beta_jsr" public_interface="out" units="dimensionless"/>
         <variable name="time" public_interface="in" units="ms"/>
         <variable initial_value="10000" name="CSQ_tot" public_interface="out" units="uM"/>
@@ -755,4 +755,4 @@
         <map_variables variable_1="J_ryr" variable_2="J_ryr"/>
     </connection>
     
-<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:nodeID="n1"><endingValue xmlns="http://www.cellml.org/metadata/simulation/1.0#" xml:lang="en">40</endingValue><maximumStepSize xmlns="http://www.cellml.org/metadata/simulation/1.0#" xml:lang="en">0.0000001</maximumStepSize><algorithm xmlns="http://www.cellml.org/metadata/simulation/1.0#nonstandard-" xml:lang="en">am112</algorithm></rdf:Description><rdf:Description rdf:nodeID="n2"><boundIntervals xmlns="http://www.cellml.org/metadata/simulation/1.0#"><rdf:Description rdf:nodeID="n3"/></boundIntervals></rdf:Description><rdf:Description rdf:nodeID="n3"><rdf:rest><rdf:Description rdf:about="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/></rdf:rest><rdf:first><rdf:Description rdf:nodeID="n1"/></rdf:first></rdf:Description><rdf:Description rdf:about="#Iz9t89a_d5G"><simulation xmlns="http://www.cellml.org/metadata/simulation/1.0#"><rdf:Description rdf:nodeID="n2"/></simulation></rdf:Description></rdf:RDF></model>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="#Iz9t89a_d5G"><simulation xmlns="http://www.cellml.org/metadata/simulation/1.0#"><rdf:Description rdf:nodeID="n1"/></simulation></rdf:Description><rdf:Description rdf:nodeID="n1"><boundIntervals xmlns="http://www.cellml.org/metadata/simulation/1.0#"><rdf:Description rdf:nodeID="n2"/></boundIntervals></rdf:Description><rdf:Description rdf:nodeID="n2"><rdf:first><rdf:Description rdf:nodeID="n3"/></rdf:first><rdf:rest><rdf:Description rdf:about="http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"/></rdf:rest></rdf:Description><rdf:Description rdf:nodeID="n3"><maximumStepSize xmlns="http://www.cellml.org/metadata/simulation/1.0#" xml:lang="en">1e-4</maximumStepSize><algorithm xmlns="http://www.cellml.org/metadata/simulation/1.0#nonstandard-" xml:lang="en">am112</algorithm><endingValue xmlns="http://www.cellml.org/metadata/simulation/1.0#" xml:lang="en">40</endingValue></rdf:Description></rdf:RDF></model>
