@@ -17,11 +17,6 @@
         <variable initial_value="150" name="SERCA" public_interface="out" units="uM"/>
         <variable initial_value="910" name="Kserca_i" public_interface="out" units="uM"/>
         <variable initial_value="2240" name="Kserca_sr" public_interface="out" units="uM"/>
-        <variable name="D_cycle" public_interface="out" units="ms"/>
-        <variable name="Ksr" public_interface="out" units="dimensionless"/>
-        <variable name="Ki" public_interface="out" units="dimensionless"/>
-        <variable name="vserca" units="pms"/>
-        <variable name="J_serca" public_interface="out" units="uMpms"/>
         <variable name="J_fluo" public_interface="out" units="uMpms"/>
         <variable name="Ca_nsr" public_interface="in" units="uM"/>
         <variable initial_value="0.034" name="CaMOnRate" units="puMms"/>
@@ -43,22 +38,19 @@
                 <eq/>
                 <ci>JCaM</ci>
                 <apply>
-                    <plus/>
-                    <apply>
-                        <times/>
-                        <apply>
-                            <minus/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn>
-                        </apply>
-                        <ci>CaMOnRate</ci>
-                        <ci>Ca_cyto</ci>
-                        <ci>CaM_free</ci>
-                    </apply>
+                    <minus/>
                     <apply>
                         <times/>
                         <ci>CaMOffRate</ci>
                         <ci>CaMCa</ci>
                     </apply>
+                    <apply>
+                        <times/>
+                        <ci>CaMOnRate</ci>
+                        <ci>Ca_cyto</ci>
+                        <ci>CaM_free</ci>
+                    </apply>
+
                 </apply>
             </apply>
             <apply>
@@ -101,22 +93,19 @@
                 <eq/>
                 <ci>JATP</ci>
                 <apply>
-                    <plus/>
-                    <apply>
-                        <times/>
-                        <apply>
-                            <minus/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn>
-                        </apply>
-                        <ci>ATPOnRate</ci>
-                        <ci>Ca_cyto</ci>
-                        <ci>ATP_free</ci>
-                    </apply>
+                    <minus/>
                     <apply>
                         <times/>
                         <ci>ATPOffRate</ci>
                         <ci>ATPCa</ci>
                     </apply>
+                    <apply>
+                        <times/>
+                        <ci>ATPOnRate</ci>
+                        <ci>Ca_cyto</ci>
+                        <ci>ATP_free</ci>
+                    </apply>
+
                 </apply>
             </apply>
             <apply>
@@ -161,26 +150,21 @@
                 <ci>J_fluo
         </ci>
                 <apply>
-                    <plus/>
-                    <apply>
-                        <times/>
-                        <apply>
-                            <minus/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1
-              </cn>
-                        </apply>
-                        <ci>FluoOnRate
-            </ci>
-                        <ci>Ca_cyto
-            </ci>
-                        <ci>Fluo_free
-            </ci>
-                    </apply>
+                    <minus/>
                     <apply>
                         <times/>
                         <ci>FluoOffRate
             </ci>
                         <ci>FluoCa
+            </ci>
+                    </apply>
+                   <apply>
+                        <times/>
+                        <ci>FluoOnRate
+            </ci>
+                        <ci>Ca_cyto
+            </ci>
+                        <ci>Fluo_free
             </ci>
                     </apply>
                 </apply>
@@ -229,144 +213,8 @@
         </ci>
             </apply>
         </math>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-                <eq/>
-                <ci>J_serca</ci>
-                <apply>
-                    <times/>
-                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">2.0</cn>
-                    <ci>vserca</ci>
-                    <ci>SERCA</ci>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <ci>D_cycle</ci>
-                <apply>
-                    <plus/>
-                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">0.104217</cn>
-                    <apply>
-                        <times/>
-                        <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">17.923</cn>
-                        <ci>Ksr</ci>
-                    </apply>
-                    <apply>
-                        <plus/>
-                        <apply>
-                            <times/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1755830</cn>
-                            <ci>Ki</ci>
-                        </apply>
-                        <apply>
-                            <times/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">7616730</cn>
-                            <ci>Ki</ci>
-                            <ci>Ksr</ci>
-                        </apply>
-                        <apply>
-                            <times/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">608463000000</cn>
-                            <ci>Ki</ci>
-                            <ci>Ki</ci>
-                        </apply>
-                        <apply>
-                            <times/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">450544000000</cn>
-                            <ci>Ki</ci>
-                            <ci>Ksr</ci>
-                        </apply>
-                    </apply>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <ci>Ki</ci>
-                <apply>
-                    <times/>
-                    <apply>
-                        <divide/>
-                        <ci>Ca_cyto</ci>
-                        <apply>
-                            <times/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">0.001</cn>
-                            <ci>Kserca_i</ci>
-                        </apply>
-                    </apply>
-                    <apply>
-                        <divide/>
-                        <ci>Ca_cyto</ci>
-                        <apply>
-                            <times/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">0.001</cn>
-                            <ci>Kserca_i</ci>
-                        </apply>
-                    </apply>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <ci>Ksr</ci>
-                <apply>
-                    <times/>
-                    <apply>
-                        <divide/>
-                        <ci>Ca_nsr</ci>
-                        <apply>
-                            <times/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">0.001</cn>
-                            <ci>Kserca_sr</ci>
-                        </apply>
-                    </apply>
-                    <apply>
-                        <divide/>
-                        <ci>Ca_nsr</ci>
-                        <apply>
-                            <times/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">0.001</cn>
-                            <ci>Kserca_sr</ci>
-                        </apply>
-                    </apply>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <ci>vserca</ci>
-                <apply>
-                    <divide/>
-                    <apply>
-                        <plus/>
-                        <apply>
-                            <times/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">3248730000000</cn>
-                            <ci>Ki</ci>
-                            <ci>Ki</ci>
-                        </apply>
-                        <apply>
-                            <plus/>
-                            <apply>
-                                <times/>
-                                <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">9178460</cn>
-                                <ci>Ki</ci>
-                            </apply>
-                            <apply>
-                                <times/>
-                                <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">-11478.2</cn>
-                                <ci>Ki</ci>
-                                <ci>Ksr</ci>
-                            </apply>
-                        </apply>
-                        <apply>
-                            <times/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">-0.329904</cn>
-                            <ci>Ksr</ci>
-                        </apply>
-                    </apply>
-                    <ci>D_cycle</ci>
-                </apply>
-            </apply>
-        </math>
-        <math xmlns="http://www.w3.org/1998/Math/MathML"><apply><eq/><ci>J_tnc</ci><apply><plus/><apply><times/><apply><minus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn></apply><ci>TncOnrate</ci><ci>Ca_cyto</ci><apply><minus/><ci>TnCtotal</ci><ci>CaTnC</ci></apply></apply><apply><times/><ci>TncOffrate</ci><ci>CaTnC</ci></apply></apply></apply><apply><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>CaTnC</ci></apply><apply><minus/><ci>J_tnc</ci></apply></apply></math>
+
+        <math xmlns="http://www.w3.org/1998/Math/MathML"><apply><eq/><ci>J_tnc</ci><apply><minus/><apply><times/><ci>TncOffrate</ci><ci>CaTnC</ci></apply><apply><times/><ci>TncOnrate</ci><ci>Ca_cyto</ci><apply><minus/><ci>TnCtotal</ci><ci>CaTnC</ci></apply></apply></apply></apply><apply><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>CaTnC</ci></apply><apply><minus/><ci>J_tnc</ci></apply></apply></math>
         <math xmlns="http://www.w3.org/1998/Math/MathML"><apply id="Ca_cyto"><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>Ca_cyto</ci></apply><apply><minus/><apply><plus/><ci>J_tnc</ci><ci>J_fluo</ci><ci>JATP</ci><ci>JCaM</ci></apply><ci>J_cyto</ci></apply></apply></math>
     </component>
     <component name="environment">
@@ -401,180 +249,7 @@
         <variable name="J_ryr" public_interface="out" units="uMpms"/>
         <variable initial_value="0.02" name="P_open" units="dimensionless"/>
         <variable name="time" public_interface="in" units="ms"/>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-                <eq/>
-                <ci>N_open</ci>
-                <apply>
-                    <times/>
-                    <ci>NumRyR</ci>
-                    <ci>P_open</ci>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <ci>N_closed</ci>
-                <apply>
-                    <minus/>
-                    <ci>NumRyR</ci>
-                    <ci>N_open</ci>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <ci>K_m</ci>
-                <apply>
-                    <minus/>
-                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="uM">6.0</cn>
-                    <apply>
-                        <times/>
-                        <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">0.0024</cn>
-                        <ci>Ca_jsr</ci>
-                    </apply>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <ci>CF_close</ci>
-                <apply>
-                    <times/>
-                    <ci>k_coop</ci>
-                    <apply>
-                        <plus/>
-                        <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn>
-                        <apply>
-                            <divide/>
-                            <apply>
-                                <plus/>
-                                <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn>
-                                <ci>N_closed</ci>
-                            </apply>
-                            <apply>
-                                <plus/>
-                                <ci>N_closed</ci>
-                                <ci>N_open</ci>
-                            </apply>
-                        </apply>
-                    </apply>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <ci>CF_open</ci>
-                <apply>
-                    <plus/>
-                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn>
-                    <apply>
-                        <divide/>
-                        <apply>
-                            <plus/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn>
-                            <ci>N_open</ci>
-                        </apply>
-                        <apply>
-                            <plus/>
-                            <ci>N_closed</ci>
-                            <ci>N_open</ci>
-                        </apply>
-                    </apply>
-                </apply>
-            </apply>
-
-
-
-            <apply>
-                <eq/>
-                <ci>I_ryr</ci>
-                <apply>
-                  <times/>
-                  <ci>J_ryr</ci>
-                  <ci>V_dyad</ci>
-                  <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">2e12</cn>
-                  <ci>F</ci>                    
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <ci>J_ryr</ci>
-                <apply>
-                    <times/>
-                    <ci>g_ryr</ci>
-                    <ci>NumRyR</ci>
-                    <ci>P_open</ci>
-                    <apply>
-                        <minus/>
-                        <ci>Ca_jsr</ci>
-                        <ci>Ca_dyad</ci>
-                    </apply>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <ci>kco_ryr</ci>
-                <apply>
-                    <times/>
-                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="pms">30.0</cn>
-                    <ci>CF_open</ci>
-                    <apply>
-                        <divide/>
-                        <apply>
-                            <power/>
-                            <ci>Ca_dyad</ci>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">4</cn>
-                        </apply>
-                        <apply>
-                            <plus/>
-                            <apply>
-                                <power/>
-                                <ci>K_m</ci>
-                                <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">4</cn>
-                            </apply>
-                            <apply>
-                                <power/>
-                                <ci>Ca_dyad</ci>
-                                <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">4</cn>
-                            </apply>
-                        </apply>
-                    </apply>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <ci>koc_ryr</ci>
-                <apply>
-                    <times/>
-                    <ci>CF_close</ci>
-                    <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="pms">0.48</cn>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <apply>
-                    <diff/>
-                    <bvar>
-                        <ci>time</ci>
-                    </bvar>
-                    <ci>P_open</ci>
-                </apply>
-                <apply>
-                    <minus/>
-                    <apply>
-                        <times/>
-                        <ci>kco_ryr</ci>
-                        <apply>
-                            <minus/>
-                            <cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn>
-                            <ci>P_open</ci>
-                        </apply>
-                    </apply>
-                    <apply>
-                        <times/>
-                        <ci>koc_ryr</ci>
-                        <ci>P_open</ci>
-                    </apply>
-                </apply>
-            </apply>
-        </math>
+        <math xmlns="http://www.w3.org/1998/Math/MathML"><apply><eq/><ci>N_open</ci><apply><times/><ci>NumRyR</ci><ci>P_open</ci></apply></apply><apply><eq/><ci>N_closed</ci><apply><minus/><ci>NumRyR</ci><ci>N_open</ci></apply></apply><apply><eq/><ci>K_m</ci><apply><minus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="uM">6</cn><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">0.0024</cn><ci>Ca_jsr</ci></apply></apply></apply><apply><eq/><ci>CF_close</ci><piecewise><piece><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">0</cn><apply><eq/><ci>NumRyR</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">0</cn></apply></piece><otherwise><apply><times/><ci>k_coop</ci><apply><plus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn><apply><divide/><apply><plus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn><ci>N_closed</ci></apply><ci>NumRyR</ci></apply></apply></apply></otherwise></piecewise></apply><apply><eq/><ci>CF_open</ci><piecewise><piece><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">0</cn><apply><eq/><ci>NumRyR</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">0</cn></apply></piece><otherwise><apply><plus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn><apply><divide/><apply><plus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn><ci>N_open</ci></apply><ci>NumRyR</ci></apply></apply></otherwise></piecewise></apply><apply><eq/><ci>I_ryr</ci><apply><times/><ci>J_ryr</ci><ci>V_dyad</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">2000000000000</cn><ci>F</ci></apply></apply><apply><eq/><ci>J_ryr</ci><apply><times/><ci>g_ryr</ci><ci>NumRyR</ci><ci>P_open</ci><apply><minus/><ci>Ca_jsr</ci><ci>Ca_dyad</ci></apply></apply></apply><apply><eq/><ci>kco_ryr</ci><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="pms">30</cn><ci>CF_open</ci><apply><divide/><apply><power/><ci>Ca_dyad</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">4</cn></apply><apply><plus/><apply><power/><ci>K_m</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">4</cn></apply><apply><power/><ci>Ca_dyad</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">4</cn></apply></apply></apply></apply></apply><apply><eq/><ci>koc_ryr</ci><apply><times/><ci>CF_close</ci><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="pms">0.48</cn></apply></apply><apply><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>P_open</ci></apply><apply><minus/><apply><times/><ci>kco_ryr</ci><apply><minus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn><ci>P_open</ci></apply></apply><apply><times/><ci>koc_ryr</ci><ci>P_open</ci></apply></apply></apply></math>
         <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
                 <eq/>
