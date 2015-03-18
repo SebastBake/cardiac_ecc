@@ -27,9 +27,9 @@
   <component name="CRU">
     <variable name="Ca_free" public_interface="in" units="uM"/>
     <variable name="time" public_interface="in" units="ms"/>
-    <variable initial_value="5" name="timelag" units="ms"/>
+    <variable initial_value="0" name="timelag" units="ms"/>
     <variable initial_value="10" name="releasetime" units="ms"/>
-    <variable initial_value="5e-15" name="iCa" units="Cperms"/>
+    <variable initial_value="2e-15" name="iCa" units="Cperms"/>
     <variable initial_value="96500" name="F" units="Cpermol"/>
     <variable initial_value="4.19e-3" name="Vcyto" units="um3"/>
     <variable name="G" units="dimensionless"/>
