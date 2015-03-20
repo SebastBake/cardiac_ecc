@@ -260,7 +260,7 @@
         <variable name="Ca_cyto" public_interface="in" units="uM"/>
         <variable initial_value="0.1" name="Ca_dyad" units="uM"/>
         <variable initial_value="0.5e-15" name="g_ilcc" units="Cpms"/>
-        <variable initial_value="0.5" name="g_ryr" units="pms"/>
+        <variable initial_value="0.4" name="g_ryr" units="pms"/>
         <variable initial_value="0.0" name="lag_lcc" units="ms"/>
         <variable initial_value="0.5" name="t_lcc" units="ms"/>
         <variable name="i_lcc" units="Cpms"/>
@@ -269,7 +269,7 @@
         <variable initial_value="9.6485e4" name="F" units="Cpmol"/>
         <variable name="I_ryr" units="pA"/>
         <variable name="J_cyto" public_interface="out" units="uMpms"/>
-        <variable initial_value="12.0" name="g_cyto" units="pms"/>
+        <variable initial_value="14.0" name="g_cyto" units="pms"/>
         <variable name="koc_ryr" units="pms"/>
         <variable name="kco_ryr" units="pms"/>
         <variable initial_value="1.0" name="k_coop" units="dimensionless"/>
@@ -555,8 +555,8 @@
         </math>
     </component>
     <component name="SR">
-        <variable initial_value="1000" name="Ca_nsr" public_interface="out" units="uM"/>
-        <variable initial_value="1000" name="Ca_jsr" public_interface="out" units="uM"/>
+        <variable initial_value="2000" name="Ca_nsr" public_interface="out" units="uM"/>
+        <variable initial_value="2000" name="Ca_jsr" public_interface="out" units="uM"/>
         <variable name="V_dyad" public_interface="in" units="m3"/>
         <variable initial_value="3.78e-21" name="V_jsr" public_interface="out" units="m3"/>
         <variable name="J_ryr" public_interface="in" units="uMpms"/>
