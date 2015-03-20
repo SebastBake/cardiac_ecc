@@ -807,6 +807,8 @@ PROGRAM CUBE_SPARK
   !First solver is a DAE solver
   CALL CMISSSolver_Initialise(Solver,Err)
   CALL CMISSProblem_SolverGet(Problem,CMISS_CONTROL_LOOP_NODE,1,Solver,Err)
+  CALL CMISSSolver_DAESolverTypeSet(Solver,CMISS_SOLVER_DAE_BDF,Err)
+  CALL CMISSSolver_LibraryTypeSet(Solver,CMISS_SOLVER_PETSC_LIBRARY,Err)
   CALL CMISSSolver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err)
   CALL CMISSSolver_OutputTypeSet(Solver,CMISS_SOLVER_NO_OUTPUT,Err)
 
@@ -831,6 +833,8 @@ PROGRAM CUBE_SPARK
   !Third solver is another DAE solver
   CALL CMISSSolver_Initialise(Solver,Err)
   CALL CMISSProblem_SolverGet(Problem,CMISS_CONTROL_LOOP_NODE,3,Solver,Err)
+  CALL CMISSSolver_DAESolverTypeSet(Solver,CMISS_SOLVER_DAE_BDF,Err)
+  CALL CMISSSolver_LibraryTypeSet(Solver,CMISS_SOLVER_PETSC_LIBRARY,Err)
   CALL CMISSSolver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err) !set the third solver's integration time step
   CALL CMISSSolver_OutputTypeSet(Solver,CMISS_SOLVER_NO_OUTPUT,Err)
   !CALL CMISSSolverOutputTypeSet(Solver,CMISSSolverTimingOutput,Err)
