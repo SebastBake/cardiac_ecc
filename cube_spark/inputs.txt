@@ -2,17 +2,25 @@
 #Node Number from which Calcium is released
 9
 #Number of RyRs in a cluster, Density of RyR clusters (number of clusters/unit volume) at the node
-1,1.0
+50,1.0
 #CEllML FILE of RyR model
-'../ryrNtroponinNfluo3_wryrscaling_wtimelag_wmarkov.xml'
+'../cicr_sobie2002.xml'
 #init_Ca,Diffx,Diffy, Diffz,iCa
 0.1,0.2200,0.2200,0.22,0.6e-15
 #init_F3,f3Diffx,f3Diffy,f3Diffz
 22.92,0.042,0.042,0.042
 #init_F3Ca,f3caDiffx,f3caDiffy,f3caDiffz
 2.08,0.042,0.042,0.042
+#CaM
+23.529,0.025,0.025,0.025
+#CaMCa
+0.471,0.025,0.025,0.025
+#ATP
+454.682,0.14,0.14,0.14
+#ATPCa
+0.318,0.14,0.14,0.14
 #initial distribution of CaTnC - homogenous through myofibril region
-10.0
+10.0,4.85,12.78,0.1,1000
 #Tstart,Tend,Tstep,ODESTEP
-0.0,30.0,0.01,0.0001
+0.0,30.0,0.1,0.0001
 
