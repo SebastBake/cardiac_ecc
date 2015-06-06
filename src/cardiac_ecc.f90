@@ -80,6 +80,8 @@ PROGRAM CARDIAC_ECC
   INTEGER(CMISSIntg), PARAMETER :: RyRReleaseLagFieldUserNumber=34
   INTEGER(CMISSIntg), PARAMETER :: CaDyadFieldUserNumber=54
   INTEGER(CMISSIntg), PARAMETER :: CaJSRFieldUserNumber=55
+  INTEGER(CMISSIntg), PARAMETER :: iLCCFieldUserNumber=56
+  
 
 
   INTEGER(CMISSIntg), PARAMETER :: FCaEquationsSetUserNumber=24
@@ -118,6 +120,7 @@ PROGRAM CARDIAC_ECC
   INTEGER(CMISSIntg), PARAMETER :: ATPCaFieldUserNumber=51
   INTEGER(CMISSIntg), PARAMETER :: ATPCaEquationsSetFieldUserNumber=52
   INTEGER(CMISSIntg), PARAMETER :: iATPCaFieldUserNumber=53
+  
 
   INTEGER(CMISSIntg), PARAMETER :: ProblemUserNumber=17
   INTEGER(CMISSIntg), PARAMETER :: CellMLUserNumber=18
@@ -155,7 +158,7 @@ PROGRAM CARDIAC_ECC
   TYPE(CMISSCellMLEquationsType) :: CellMLEquations
   TYPE(CMISSFieldType) :: CellMLModelsField,CellMLStateField,CellMLIntermediateField,CellMLParametersField
   TYPE(CMISSFieldType) :: PopenField,CaTnCField,RyRDenseField,iFCaField,iFField,RyRReleaseLagField,CaJSRField,CaDyadField
-  TYPE(CMISSFieldType) :: iCaMField,iCaMCaField,iATPField,iATPCaField
+  TYPE(CMISSFieldType) :: iCaMField,iCaMCaField,iATPField,iATPCaField,iLCCField
 
   !Defining program-specific fortran variables
 
@@ -704,6 +707,29 @@ PROGRAM CARDIAC_ECC
     & CMISS_FIELD_NODE_BASED_INTERPOLATION,ERR)
   CALL CMISSField_CreateFinish(RyRReleaseLagField,Err)
 
+  !set up ilcc field
+  CALL CMISSField_Initialise(iLCCField,Err)
+  CALL CMISSField_CreateStart(iLCCFieldUserNumber,Region,iLCCField,Err)
+  CALL CMISSField_TypeSet(iLCCField,CMISS_FIELD_GENERAL_TYPE,Err)
+  CALL CMISSField_MeshDecompositionSet(iLCCField,Decomposition,Err)
+  CALL CMISSField_GeometricFieldSet(iLCCField,GeometricField,Err)
+  CALL CMISSField_NumberOfVariablesSet(iLCCField,1,Err)
+  CALL CMISSField_VariableTypesSet(iLCCField,[CMISS_FIELD_U_VARIABLE_TYPE],Err)
+  CALL CMISSField_DataTypeSet(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_DP_TYPE,Err)
+  CALL CMISSField_DimensionSet(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_SCALAR_DIMENSION_TYPE,Err)
+  CALL CMISSField_NumberOfComponentsSet(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,1,Err)
+  CALL CMISSField_VariableLabelSet(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,"iLCCField",Err)
+  CALL CMISSField_ComponentMeshComponentGet(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE, &
+    & 1,GeometricMeshComponent,ERR)
+  !Default to the geometric interpolation setup
+  CALL CMISSField_ComponentMeshComponentSet(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+    & GeometricMeshComponent,ERR)
+  !Specify the interpolation to be same as geometric interpolation
+  CALL CMISSField_ComponentInterpolationSet(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+    & CMISS_FIELD_NODE_BASED_INTERPOLATION,ERR)
+  CALL CMISSField_CreateFinish(iLCCField,Err)
+
+
   !Initialise RyR intensity Field, multiply the intensity by number of ryrs per cluster
   ! also Set RyR time lag Field
 
@@ -716,17 +742,26 @@ PROGRAM CARDIAC_ECC
         CALL CMISSField_ParameterSetUpdateNode(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE, &
           & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,0.0_CMISSDP,Err)
         CALL CMISSField_ParameterSetUpdateNode(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE, &
+          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,100.0_CMISSDP,Err)
+        CALL CMISSField_ParameterSetUpdateNode(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE, &
           & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,0.0_CMISSDP,Err)
+          
 
       ELSE
         CALL CMISSField_ParameterSetUpdateNode(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE, &
           & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,(NumRyRsPerCluster*RyRDensity(node,1)),Err)
         CALL CMISSField_ParameterSetUpdateNode(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE, &
           & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,(RyRDensity(node,2)),Err)
+        CALL CMISSField_ParameterSetUpdateNode(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE, &
+          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,0.0_CMISSDP,Err)
+          
 
       ENDIF
       IF(RyRDensity(node,1).GE.0.1_CMISSDP) THEN
         NonZeroNodes=NonZeroNodes+1
+        CALL CMISSField_ParameterSetUpdateNode(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE, &
+          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,0.5e-16_CMISSDP,Err)
+        
       ENDIF
     ENDIF
   ENDDO
@@ -735,6 +770,9 @@ PROGRAM CARDIAC_ECC
 
   CALL CMISSField_ParameterSetUpdateStart(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
   CALL CMISSField_ParameterSetUpdateFinish(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+
+  CALL CMISSField_ParameterSetUpdateStart(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSField_ParameterSetUpdateFinish(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
   WRITE(*,*) 'Number of Non-Zero RyR Nodes',NonZeroNodes
 
@@ -1489,6 +1527,8 @@ PROGRAM CARDIAC_ECC
   ! set RyRDensity as known so that it can be set as spatially varying in opencmiss.
   CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"Dyad/NumRyR",Err)
   CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"Dyad/lag_lcc",Err)
+  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"Dyad/g_ilcc",Err)
+  
 
   !to get from the CellML side. variables in cellml model that are not state variables, but are dependent on independent and state variables. 
   !- components of intermediate field
@@ -1527,6 +1567,12 @@ PROGRAM CARDIAC_ECC
     & ryrModelIndex,"Dyad/lag_lcc",CMISS_FIELD_VALUES_SET_TYPE,Err)
   CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Dyad/lag_lcc",CMISS_FIELD_VALUES_SET_TYPE, &
     & RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+
+  !Mapping iLCCField to g_ilcc in the cellml model
+  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Dyad/g_ilcc",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Dyad/g_ilcc",CMISS_FIELD_VALUES_SET_TYPE, &
+    & iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping Buffer-Complex resting values of cellml model to appropriate fields set up above
 
