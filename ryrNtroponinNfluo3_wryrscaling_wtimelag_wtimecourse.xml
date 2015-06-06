@@ -41,8 +41,8 @@
     <math xmlns="http://www.w3.org/1998/Math/MathML">
       <apply><eq/><ci>Jryr</ci><piecewise><piece><cn>0</cn><apply><and/><apply><geq/><ci>time</ci><cn>0</cn></apply><apply><lt/><ci>time</ci><ci>timelag</ci></apply></apply></piece><otherwise><apply><divide/><apply><times/><ci>G</ci><ci>iCa</ci><ci>ryrDensity</ci><cn>1000000000000000000000</cn></apply><apply><times/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">2</cn><ci>F</ci><ci>Vcyto</ci></apply></apply></otherwise></piecewise></apply>
       <apply><eq/><ci>G</ci><apply><times/><apply><exp/><apply><divide/><apply><minus/><ci>time</ci></apply><ci>taurise</ci></apply></apply><apply><minus/><cn xmlns:cellml="http://www.cellml.org/cellml/1.1#" cellml:units="dimensionless">1</cn><apply><exp/><apply><divide/><apply><minus/><ci>time</ci></apply><ci>taudecay</ci></apply></apply></apply></apply></apply>
-    </math>
-  </component>
+    <apply><eq/><apply><diff/><bvar><ci>time</ci></bvar><ci>sumJryr</ci></apply><ci>Jryr</ci></apply></math>
+  <variable initial_value="0" name="sumJryr" units="uM"/></component>
 
  <component name="TnCBuffer">
     <variable name="Jtnc" public_interface="out" units="uMperms"/>
