@@ -127,6 +127,8 @@ PROGRAM CUBE_SPARK
 
   INTEGER(CMISSIntg), PARAMETER :: CaSLBufFieldUserNumber=58
   INTEGER(CMISSIntg), PARAMETER :: CaSRBufFieldUserNumber=59
+  INTEGER(CMISSIntg), PARAMETER :: iLCCFieldUserNumber=60
+  
   
 
 
@@ -158,7 +160,7 @@ PROGRAM CUBE_SPARK
   TYPE(CMISSCellMLEquationsType) :: CellMLEquations
   TYPE(CMISSFieldType) :: CellMLModelsField,CellMLStateField,CellMLIntermediateField,CellMLParametersField
   TYPE(CMISSFieldType) :: iCaField,CaTnCField,NumRyRField,iFCaField,iFField,iCaMField,iATPField,iCaMCaField,iATPCaField
-  TYPE(CMISSFieldType) :: CaSLBufField,CaSRBufField
+  TYPE(CMISSFieldType) :: CaSLBufField,CaSRBufField,iLCCField
   TYPE(CMISSGeneratedMeshType) :: GeneratedMesh    
 
   !Program variables
@@ -180,7 +182,7 @@ PROGRAM CUBE_SPARK
     & caDiffx, caDiffy,caDiffz,fcaDiffx, fcaDiffy,fcaDiffz,fDiffx,fDiffy,fDiffz,store_coeff,iCa,init_CaTnC,NodeRyRDensity
   REAL(CMISSDP) :: init_CaM, init_CaMCa, init_ATP, init_ATPCa, &
     & camDiffx, camDiffy,camDiffz,camcaDiffx, camcaDiffy,camcaDiffz,atpDiffx,atpDiffy,atpDiffz, &
-    & atpcaDiffx,atpcaDiffy,atpcaDiffz,init_CaDyad,init_CaJSR   
+    & atpcaDiffx,atpcaDiffy,atpcaDiffz,init_CaDyad,init_CaJSR,init_CaSLBuf,init_CaSRBuf,init_Popen   
   INTEGER(CMISSIntg) :: NonZeroNodes
   CHARACTER(250) :: CELLID,NODEFILE,ELEMFILE,CELLPATH,RyRModel,RYRDENSITYFILE
   INTEGER(CMISSIntg) :: NumberOfComputationalNodes,ComputationalNodeNumber,NodeDomain,ElementDomain
@@ -220,7 +222,7 @@ PROGRAM CUBE_SPARK
     READ(9,*)
     READ(9,*) RyRModel
     READ(9,*)
-    READ(9,*) init_Ca,caDiffx,caDiffy,caDiffz,iCa
+    READ(9,*) init_Ca,caDiffx,caDiffy,caDiffz,init_Popen
     READ(9,*)
     READ(9,*) init_F,fDiffx,fDiffy,fDiffz
     READ(9,*)
@@ -465,7 +467,7 @@ PROGRAM CUBE_SPARK
   CALL CMISSEquationsSet_SourceCreateFinish(CaEquationsSet,Err)
   !Initialising the iCaField to iCa everywhere. Modifying for RyRs in a later loop.
   CALL CMISSField_ComponentValuesInitialise(PopenField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
-    & 1,0.0_CMISSDP,Err)
+    & 1,init_Popen,Err)
 
   !CaSLBuf
   CALL CMISSField_Initialise(CaSLBufField,Err)
@@ -494,6 +496,34 @@ PROGRAM CUBE_SPARK
     & 1,0.0_CMISSDP,Err)
   CALL CMISSField_ParameterSetUpdateStart(CaSLBufField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
   CALL CMISSField_ParameterSetUpdateFinish(CaSLBufField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+
+
+  !iLCCField
+  !Set up number of RyRs in each cluster as a spatial distribution field
+  !set up intensity field
+  CALL CMISSField_Initialise(iLCCField,Err)
+  CALL CMISSField_CreateStart(iLCCFieldUserNumber,Region,iLCCField,Err)
+  CALL CMISSField_TypeSet(iLCCField,CMISS_FIELD_GENERAL_TYPE,Err)
+  CALL CMISSField_MeshDecompositionSet(iLCCField,Decomposition,Err)
+  CALL CMISSField_GeometricFieldSet(iLCCField,GeometricField,Err)
+  CALL CMISSField_NumberOfVariablesSet(iLCCField,1,Err)
+  CALL CMISSField_VariableTypesSet(iLCCField,[CMISS_FIELD_U_VARIABLE_TYPE],Err)
+  CALL CMISSField_DataTypeSet(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_DP_TYPE,Err)
+  CALL CMISSField_DimensionSet(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_SCALAR_DIMENSION_TYPE,Err)
+  CALL CMISSField_NumberOfComponentsSet(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,1,Err)
+  CALL CMISSField_VariableLabelSet(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,"iLCC Field",Err)
+  CALL CMISSField_ComponentMeshComponentGet(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE, & 
+    & 1,GeometricMeshComponent,ERR)
+  !Default to the geometric interpolation setup
+  CALL CMISSField_ComponentMeshComponentSet(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+    & GeometricMeshComponent,ERR)            
+  !Specify the interpolation to be same as geometric interpolation
+  CALL CMISSField_ComponentInterpolationSet(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+    & CMISS_FIELD_NODE_BASED_INTERPOLATION,ERR)
+  CALL CMISSField_CreateFinish(iLCCField,Err)
+  !Initialise Num RyR Field
+  CALL CMISSField_ComponentValuesInitialise(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    & 1,0.0_CMISSDP,Err)
 
 
   !NumRyRField
@@ -535,6 +565,9 @@ PROGRAM CUBE_SPARK
     !Setting SLBuffer concentration only at nodes that make the dyad.
     CALL CMISSField_ParameterSetUpdateNode(CaSLBufField,CMISS_FIELD_U_VARIABLE_TYPE, &
       & CMISS_FIELD_VALUES_SET_TYPE,1,1,RYR_NODE_NUMBER,1,(init_CaSLBuf),Err)
+
+    CALL CMISSField_ParameterSetUpdateNode(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE, &
+      & CMISS_FIELD_VALUES_SET_TYPE,1,1,RYR_NODE_NUMBER,1,0.5e-16_CMISSDP,Err)
 
     !noting the coordinates of the ryr release node.
     CALL CMISSField_ParameterSetGetNode(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1, &
@@ -580,7 +613,10 @@ PROGRAM CUBE_SPARK
             
         !Setting SLBuffer concentration only at nodes that make the dyad.
         CALL CMISSField_ParameterSetUpdateNode(CaSLBufField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,RYR_NODE_NUMBER,1,(init_CaSLBuf),Err)
+          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,(init_CaSLBuf),Err)
+
+        CALL CMISSField_ParameterSetUpdateNode(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE, &
+          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,0.5e-16_CMISSDP,Err)
 
         NUMBER_RELEASE_NODES = NUMBER_RELEASE_NODES+1
       ENDIF
@@ -588,6 +624,8 @@ PROGRAM CUBE_SPARK
   ENDDO
   CALL CMISSField_ParameterSetUpdateStart(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
   CALL CMISSField_ParameterSetUpdateFinish(NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSField_ParameterSetUpdateStart(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSField_ParameterSetUpdateFinish(iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
   CALL CMISSField_ParameterSetUpdateStart(CaSLBufField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
   CALL CMISSField_ParameterSetUpdateFinish(CaSLBufField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
   
@@ -1039,6 +1077,8 @@ PROGRAM CUBE_SPARK
   !CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/iCa",Err)
   ! set RyRDensity as known so that it can be set as spatially varying in opencmiss.
   CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"Dyad/NumRyR",Err)
+  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"Dyad/g_ilcc",Err)
+  
   !to get from the CellML side. variables in cellml model that are not state variables, but are dependent on independent and state variables. 
   !- components of intermediate field
   !fluxes of the different buffers and CaRUs that I want to get out as intermediate variables
@@ -1049,7 +1089,9 @@ PROGRAM CUBE_SPARK
 
     !Start the creation of CellML <--> OpenCMISS field maps
   !Mapping free calcium in opencmiss to that in cellml.
+
   CALL CMISSCellML_FieldMapsCreateStart(CellML,Err)
+
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
     & ryrModelIndex,"Cytoplasm/Ca_cyto",CMISS_FIELD_VALUES_SET_TYPE,Err)
   CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Cytoplasm/Ca_cyto",CMISS_FIELD_VALUES_SET_TYPE, &
@@ -1060,6 +1102,11 @@ PROGRAM CUBE_SPARK
     & ryrModelIndex,"Dyad/P_open",CMISS_FIELD_VALUES_SET_TYPE,Err)
   CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Dyad/P_open",CMISS_FIELD_VALUES_SET_TYPE, &
     & PopenField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+
+  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"Dyad/g_ilcc",CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"Dyad/g_ilcc",CMISS_FIELD_VALUES_SET_TYPE, &
+    & iLCCField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
 
    !Mapping NumRyRField to NumRyR in the cellml model
   CALL CMISSCellML_CreateFieldToCellMLMap(CellML,NumRyRField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
