@@ -29,6 +29,13 @@ cube_spark/:
  
  meshinputs/:
   - directory containing all the necessary inputs related to the geometry that are required for the simulations
+  
+  - filenames containing .1.node/ele/face : tetgen generated half-sarcomere mesh files of an electron-tomogram derived rat ventricular myocyte
+
+  - filename containing .1.bdnode : node numbers of the mesh around the outer surface at which some boundary conditions are assigned. 
+
+  - filenames containing _N123_simPP3_tausim2 : text file containing spatially varying fields representing density of ryr clusters (total number determined by the number after "N") and the ryr-cluster associated lag in triggering of calcium release; the fields are defined at the mesh nodes. The number after simPP determines the version of the RyR cluster simulation results being used and the number after tausim identifies the version of the time release lag sampling that is being used.
+
 
 RUNNING THE PROGRAM
 -------------------
