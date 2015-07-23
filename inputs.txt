@@ -8,11 +8,11 @@
 #bd face file
 './meshinputs/combined_tet_mesh_wryrgap.1.face','./meshinputs/combined_tet_mesh_wryrgap.1.bdnode'
 #ryr spatial density file,Number of channels per cluster
-'./meshinputs/combined_tet_mesh_wryrgap.1_spherical_ryr_kie_wh0.05.simPP3_N123_tausimnum_1.txt',100
+'./meshinputs/combined_tet_mesh_wryrgap.1_spherical_ryr_kie_wh0.05.simPP3_N123_tausimnum_1.txt',50
 #CEllML FILE,switch to turn on cellml model or not.
 './cicr_sobie2002.xml',1
 #init_Ca,Diffx,Diffy, Diffz,init P_open
-0.1,0.2200,0.2200,0.22,0.02
+0.1,0.2200,0.2200,0.22,0.0
 #init_F3,f3Diffx,f3Diffy,f3Diffz
 22.92,0.042,0.042,0.042
 #init_F3Ca,f3caDiffx,f3caDiffy,f3caDiffz
