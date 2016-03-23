@@ -1,7 +1,7 @@
 !> \file
 !> $Id: cardiac_ecc.f90 2014-12-16 vraj004 $
 !> \author Vijay Rajagopal
-!> \brief Main program file to simulate cardiac ECC using opencmiss library routines
+!> \brief Main program file to simulate cardiac ECC using opencmfe_ library routines
 !>
 !> \section LICENSE
 !>
@@ -17,7 +17,7 @@
 !> License for the specific language governing rights and limitations
 !> under the License.
 !>
-!> The Original Code is OpenCMISS
+!> The Original Code is Opencmfe_
 !>
 !> The Initial Developer of the Original Code is University of Auckland,
 !> Auckland, New Zealand and University of Oxford, Oxford, United
@@ -47,16 +47,23 @@
 
 !> Main program
 PROGRAM CARDIAC_ECC
-
-  USE OPENCMISS
+  USE OpenCMISS
+  USE OpenCMISS_Iron
+#ifndef NOMPIMOD
   USE MPI
-  USE FIELDML_API
+#endif
 
 #ifdef WIN32
   USE IFQWIN
 #endif
 
   IMPLICIT NONE
+
+#ifdef NOMPIMOD
+#include "mpif.h"
+#endif
+
+
 
   ! program parameters
 
@@ -125,35 +132,35 @@ PROGRAM CARDIAC_ECC
   INTEGER(CMISSIntg), PARAMETER :: CellMLParametersFieldUserNumber=22
 
 
-  !Defining CMISS-type variables
-  TYPE(CMISSBasisType) :: Basis
-  TYPE(CMISSCoordinateSystemType) :: CoordinateSystem,WorldCoordinateSystem
-  TYPE(CMISSDecompositionType) :: Decomposition
-  TYPE(CMISSFieldType) :: GeometricField,CaMaterialsField,FCaMaterialsField,FMaterialsField,CaField,FCaField,FField
-  TYPE(CMISSFieldType) :: CaEquationsSetField,FCaEquationsSetField,FEquationsSetField
-  TYPE(CMISSFieldType) :: CaMMaterialsField, CaMEquationsSetField,CaMField
-  TYPE(CMISSFieldType) :: CaMCaMaterialsField, CaMCaEquationsSetField,CaMCaField
-  TYPE(CMISSFieldType) :: ATPField,ATPMaterialsField,ATPEquationsSetField
-  TYPE(CMISSFieldType) :: ATPCaField,ATPCaMaterialsField,ATPCaEquationsSetField
-  TYPE(CMISSFieldsType) :: Fields
-  TYPE(CMISSMeshType) :: Mesh
-  TYPE(CMISSMeshElementsType) :: MeshElements
-  TYPE(CMISSNodesType) :: Nodes
-  TYPE(CMISSRegionType) :: Region,WorldRegion
-  TYPE(CMISSEquationsType) :: CaEquations,FCaEquations,FEquations,CaMEquations,CaMCaEquations,ATPEquations
-  TYPE(CMISSEquationsType) :: ATPCaEquations
-  TYPE(CMISSEquationsSetType) :: CaEquationsSet,FCaEquationsSet,FEquationsSet,ATPEquationsSet,CaMEquationsSet
-  TYPE(CMISSEquationsSetType) :: ATPCaEquationsSet,CaMCaEquationsSet
-  TYPE(CMISSControlLoopType) :: ControlLoop
-  TYPE(CMISSProblemType) :: Problem
-  TYPE(CMISSSolverType) :: Solver,LinearSolver
-  TYPE(CMISSSolverEquationsType) :: SolverEquations
-  TYPE(CMISSBoundaryConditionsType) :: BoundaryConditions
-  TYPE(CMISSCellMLType) :: CellML
-  TYPE(CMISSCellMLEquationsType) :: CellMLEquations
-  TYPE(CMISSFieldType) :: CellMLModelsField,CellMLStateField,CellMLIntermediateField,CellMLParametersField
-  TYPE(CMISSFieldType) :: iCaField,CaTnCField,RyRDenseField,iFCaField,iFField,RyRReleaseLagField
-  TYPE(CMISSFieldType) :: iCaMField,iCaMCaField,iATPField,iATPCaField
+  !Defining cmfe_-type variables
+  TYPE(cmfe_BasisType) :: Basis
+  TYPE(cmfe_CoordinateSystemType) :: CoordinateSystem,WorldCoordinateSystem
+  TYPE(cmfe_DecompositionType) :: Decomposition
+  TYPE(cmfe_FieldType) :: GeometricField,CaMaterialsField,FCaMaterialsField,FMaterialsField,CaField,FCaField,FField
+  TYPE(cmfe_FieldType) :: CaEquationsSetField,FCaEquationsSetField,FEquationsSetField
+  TYPE(cmfe_FieldType) :: CaMMaterialsField, CaMEquationsSetField,CaMField
+  TYPE(cmfe_FieldType) :: CaMCaMaterialsField, CaMCaEquationsSetField,CaMCaField
+  TYPE(cmfe_FieldType) :: ATPField,ATPMaterialsField,ATPEquationsSetField
+  TYPE(cmfe_FieldType) :: ATPCaField,ATPCaMaterialsField,ATPCaEquationsSetField
+  TYPE(cmfe_FieldsType) :: Fields
+  TYPE(cmfe_MeshType) :: Mesh
+  TYPE(cmfe_MeshElementsType) :: MeshElements
+  TYPE(cmfe_NodesType) :: Nodes
+  TYPE(cmfe_RegionType) :: Region,WorldRegion
+  TYPE(cmfe_EquationsType) :: CaEquations,FCaEquations,FEquations,CaMEquations,CaMCaEquations,ATPEquations
+  TYPE(cmfe_EquationsType) :: ATPCaEquations
+  TYPE(cmfe_EquationsSetType) :: CaEquationsSet,FCaEquationsSet,FEquationsSet,ATPEquationsSet,CaMEquationsSet
+  TYPE(cmfe_EquationsSetType) :: ATPCaEquationsSet,CaMCaEquationsSet
+  TYPE(cmfe_ControlLoopType) :: ControlLoop
+  TYPE(cmfe_ProblemType) :: Problem
+  TYPE(cmfe_SolverType) :: Solver,LinearSolver
+  TYPE(cmfe_SolverEquationsType) :: SolverEquations
+  TYPE(cmfe_BoundaryConditionsType) :: BoundaryConditions
+  TYPE(cmfe_CellMLType) :: CellML
+  TYPE(cmfe_CellMLEquationsType) :: CellMLEquations
+  TYPE(cmfe_FieldType) :: CellMLModelsField,CellMLStateField,CellMLIntermediateField,CellMLParametersField
+  TYPE(cmfe_FieldType) :: iCaField,CaTnCField,RyRDenseField,iFCaField,iFField,RyRReleaseLagField
+  TYPE(cmfe_FieldType) :: iCaMField,iCaMCaField,iATPField,iATPCaField
 
   !Defining program-specific fortran variables
 
@@ -327,49 +334,49 @@ PROGRAM CARDIAC_ECC
   
   EXPORT_FIELD=.FALSE.
 !_________________________________________________________________________________________________
-  !Intialise OpenCMISS
-  CALL CMISSInitialise(WorldCoordinateSystem,WorldRegion,Err)
-  CALL CMISSErrorHandlingModeSet(CMISS_ERRORS_TRAP_ERROR,Err)
+  !Intialise Opencmfe_
+  CALL cmfe_Initialise(WorldCoordinateSystem,WorldRegion,Err)
+  CALL cmfe_ErrorHandlingModeSet(cmfe_ERRORS_TRAP_ERROR,Err)
   !get computational nodes for parallel processing
-  CALL CMISSComputationalNumberOfNodesGet(NumberOfComputationalNodes,Err)
-  CALL CMISSComputationalNodeNumberGet(ComputationalNodeNumber,Err)
+  CALL cmfe_ComputationalNumberOfNodesGet(NumberOfComputationalNodes,Err)
+  CALL cmfe_ComputationalNodeNumberGet(ComputationalNodeNumber,Err)
 
 
   !set diagnostics
-  !CALL CMISSDiagnosticsSetOn(CMISS_FROM_DIAG_TYPE,(/1,2,3,4,5/),"SOLVE_DIAGNOSTICS", &
+  !CALL cmfe_DiagnosticsSetOn(cmfe_FROM_DIAG_TYPE,(/1,2,3,4,5/),"SOLVE_DIAGNOSTICS", &
   !  & (/"REACTION_DIFFUSION_PRE_SOLVE"/),Err)
   CALL MPI_BCAST(NumberOfComputationalNodes,1,MPI_INTEGER,0,MPI_COMM_WORLD,MPI_IERROR)
 
 
    !Start the creation of a new RC coordinate system
-  CALL CMISSCoordinateSystem_Initialise(CoordinateSystem,Err)
-  CALL CMISSCoordinateSystem_CreateStart(CoordinateSystemUserNumber,CoordinateSystem,Err)
-  CALL CMISSCoordinateSystem_DimensionSet(CoordinateSystemUserNumber,3,Err)
+  CALL cmfe_CoordinateSystem_Initialise(CoordinateSystem,Err)
+  CALL cmfe_CoordinateSystem_CreateStart(CoordinateSystemUserNumber,CoordinateSystem,Err)
+  CALL cmfe_CoordinateSystem_DimensionSet(CoordinateSystemUserNumber,3,Err)
   !The coordinate system is 3D by default;set it to be 3D in above command.
   !Finish the creation of the coordinate system
-  CALL CMISSCoordinateSystem_CreateFinish(CoordinateSystem,Err)
+  CALL cmfe_CoordinateSystem_CreateFinish(CoordinateSystem,Err)
 
   !Start the creation of the region
-  CALL CMISSRegion_Initialise(Region,Err)
-  CALL CMISSRegion_CreateStart(RegionUserNumber,WorldRegion,Region,Err)
+  CALL cmfe_Region_Initialise(Region,Err)
+  CALL cmfe_Region_CreateStart(RegionUserNumber,WorldRegion,Region,Err)
   !Set the regions coordinate system to the 3D RC coordinate system that we have created
-  CALL CMISSRegion_CoordinateSystemSet(Region,CoordinateSystem,Err)
-  CALL CMISSRegion_LabelSet(Region,"Cell",Err)
+  CALL cmfe_Region_CoordinateSystemSet(Region,CoordinateSystem,Err)
+  CALL cmfe_Region_LabelSet(Region,"Cell",Err)
   !Finish the creation of the region
-  CALL CMISSRegion_CreateFinish(Region,Err)
+  CALL cmfe_Region_CreateFinish(Region,Err)
 
 !_________________________________________________________________________________________________
   !Start the creation of a trilinear-simplex basis
-  CALL CMISSBasis_Initialise(Basis,Err)
-  CALL CMISSBasis_CreateStart(BasisUserNumber,Basis,Err)
+  CALL cmfe_Basis_Initialise(Basis,Err)
+  CALL cmfe_Basis_CreateStart(BasisUserNumber,Basis,Err)
   !Set the basis to be a trilinear simplex  basis
-  CALL CMISSBasis_TypeSet(Basis,CMISS_BASIS_SIMPLEX_TYPE,Err)
-  CALL CMISSBasis_NumberOfXiSet(Basis,3,Err)
+  CALL cmfe_Basis_TypeSet(Basis,cmfe_BASIS_SIMPLEX_TYPE,Err)
+  CALL cmfe_Basis_NumberOfXiSet(Basis,3,Err)
   !set interpolation to be linear
-  CALL CMISSBasis_InterpolationXiSet(Basis,(/CMISS_Basis_Linear_Simplex_Interpolation, &
-   &   CMISS_Basis_Linear_Simplex_Interpolation, CMISS_Basis_Linear_Simplex_Interpolation/),Err)
+  CALL cmfe_Basis_InterpolationXiSet(Basis,(/cmfe_Basis_Linear_Simplex_Interpolation, &
+   &   cmfe_Basis_Linear_Simplex_Interpolation, cmfe_Basis_Linear_Simplex_Interpolation/),Err)
   !Finish the creation of the basis
-  CALL CMISSBasis_CreateFinish(Basis,Err)
+  CALL cmfe_Basis_CreateFinish(Basis,Err)
 
   !Time to create a mesh - wohoo!
   !Read in nodes (set up RyRDensity array with column 
@@ -463,181 +470,181 @@ PROGRAM CARDIAC_ECC
   CLOSE(13)
   PRINT *,'Total Cell Boundary Nodes',NUMBER_OF_CELLBDNODES
 
-  CALL CMISSNodes_Initialise(Nodes,Err)
-  CALL CMISSNodes_CreateStart(Region,NUMBER_OF_NODES,Nodes,Err)
-  CALL CMISSNodes_CreateFinish(Nodes,Err)
+  CALL cmfe_Nodes_Initialise(Nodes,Err)
+  CALL cmfe_Nodes_CreateStart(Region,NUMBER_OF_NODES,Nodes,Err)
+  CALL cmfe_Nodes_CreateFinish(Nodes,Err)
   
-  CALL CMISSMesh_Initialise(Mesh,Err)
-  CALL CMISSMesh_CreateStart(MeshUserNumber,Region,NUMBER_OF_COORDS,Mesh,Err)
-  CALL CMISSMesh_NumberOfElementsSet(Mesh,NUMBER_OF_ELEMENTS,Err)
-  CALL CMISSMesh_NumberOfComponentsSet(Mesh,1,Err)
+  CALL cmfe_Mesh_Initialise(Mesh,Err)
+  CALL cmfe_Mesh_CreateStart(MeshUserNumber,Region,NUMBER_OF_COORDS,Mesh,Err)
+  CALL cmfe_Mesh_NumberOfElementsSet(Mesh,NUMBER_OF_ELEMENTS,Err)
+  CALL cmfe_Mesh_NumberOfComponentsSet(Mesh,1,Err)
   
-  CALL CMISSMeshElements_Initialise(MeshElements,Err)
-  CALL CMISSMeshElements_CreateStart(Mesh,1,Basis,MeshElements,Err)
+  CALL cmfe_MeshElements_Initialise(MeshElements,Err)
+  CALL cmfe_MeshElements_CreateStart(Mesh,1,Basis,MeshElements,Err)
   DO i = 1,NUMBER_OF_ELEMENTS
     element = ElemMap(i,1)
-    CALL CMISSMeshElements_NodesSet(MeshElements,element,(/ElemMap(i,2),ElemMap(i,3), &
+    CALL cmfe_MeshElements_NodesSet(MeshElements,element,(/ElemMap(i,2),ElemMap(i,3), &
      &   ElemMap(i,4),ElemMap(i,5)/),Err)
   ENDDO
-  CALL CMISSMeshElements_CreateFinish(MeshElements,Err)
-  CALL CMISSMesh_CreateFinish(Mesh,Err)
+  CALL cmfe_MeshElements_CreateFinish(MeshElements,Err)
+  CALL cmfe_Mesh_CreateFinish(Mesh,Err)
 
   !Create a decomposition
-  CALL CMISSDecomposition_Initialise(Decomposition,Err)
-  CALL CMISSDecomposition_CreateStart(DecompositionUserNumber,Mesh,Decomposition,Err)
+  CALL cmfe_Decomposition_Initialise(Decomposition,Err)
+  CALL cmfe_Decomposition_CreateStart(DecompositionUserNumber,Mesh,Decomposition,Err)
   !Set the decomposition to be a general decomposition with the specified number of domains
-  CALL CMISSDecomposition_TypeSet(Decomposition,CMISS_DECOMPOSITION_CALCULATED_TYPE,Err)
-  CALL CMISSDecomposition_NumberOfDomainsSet(Decomposition,NumberOfComputationalNodes,Err)
+  CALL cmfe_Decomposition_TypeSet(Decomposition,cmfe_DECOMPOSITION_CALCULATED_TYPE,Err)
+  CALL cmfe_Decomposition_NumberOfDomainsSet(Decomposition,NumberOfComputationalNodes,Err)
   !Finish the decomposition
-  CALL CMISSDecomposition_CreateFinish(Decomposition,Err)
+  CALL cmfe_Decomposition_CreateFinish(Decomposition,Err)
 
   !Start to create a default (geometric) field on the region
-  CALL CMISSField_Initialise(GeometricField,Err)
-  CALL CMISSField_CreateStart(GeometricFieldUserNumber,Region,GeometricField,Err)
+  CALL cmfe_Field_Initialise(GeometricField,Err)
+  CALL cmfe_Field_CreateStart(GeometricFieldUserNumber,Region,GeometricField,Err)
   !Set the decomposition to use
-  CALL CMISSField_MeshDecompositionSet(GeometricField,Decomposition,Err)
+  CALL cmfe_Field_MeshDecompositionSet(GeometricField,Decomposition,Err)
   !Set the domain to be used by the field components. We have 3 field components in 1 mesh component
-  CALL CMISSField_ComponentMeshComponentSet(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,1,1,Err)
-  CALL CMISSField_ComponentMeshComponentSet(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,2,1,Err)
-  CALL CMISSField_ComponentMeshComponentSet(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,3,1,Err)
+  CALL cmfe_Field_ComponentMeshComponentSet(GeometricField,cmfe_FIELD_U_VARIABLE_TYPE,1,1,Err)
+  CALL cmfe_Field_ComponentMeshComponentSet(GeometricField,cmfe_FIELD_U_VARIABLE_TYPE,2,1,Err)
+  CALL cmfe_Field_ComponentMeshComponentSet(GeometricField,cmfe_FIELD_U_VARIABLE_TYPE,3,1,Err)
   !Finish creating the field
-  CALL CMISSField_CreateFinish(GeometricField,Err)
+  CALL cmfe_Field_CreateFinish(GeometricField,Err)
 
   !Set the geometric field values
 
   DO i = 1,NUMBER_OF_NODES
     node = NodeNums(i,1)
-    CALL CMISSDecomposition_NodeDomainGet(Decomposition,node,1,NodeDomain,Err)
+    CALL cmfe_Decomposition_NodeDomainGet(Decomposition,node,1,NodeDomain,Err)
     IF(NodeDomain==ComputationalNodeNumber) THEN
       nodex = NodeCoords(i,1)
       nodey = NodeCoords(i,2)
       nodez = NodeCoords(i,3)
-      CALL CMISSField_ParameterSetUpdateNode(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1, &
+      CALL cmfe_Field_ParameterSetUpdateNode(GeometricField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,1, &
        &   1,node,1,nodex,Err)
-      CALL CMISSField_ParameterSetUpdateNode(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1, &
+      CALL cmfe_Field_ParameterSetUpdateNode(GeometricField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,1, &
        &   1,node,2,nodey,Err)
-      CALL CMISSField_ParameterSetUpdateNode(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1, &
+      CALL cmfe_Field_ParameterSetUpdateNode(GeometricField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,1, &
        &   1,node,3,nodez,Err)
      ENDIF
     ENDDO
-  CALL CMISSField_ParameterSetUpdateStart(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSField_ParameterSetUpdateFinish(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateStart(GeometricField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateFinish(GeometricField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   IF(EXPORT_FIELD) THEN
-    CALL CMISSFields_Initialise(Fields,Err)
-    CALL CMISSFields_Create(Region,Fields,Err)
-    CALL CMISSFields_NodesExport(Fields,"Cell_Geom","FORTRAN",Err)
-    CALL CMISSFields_ElementsExport(Fields,"Cell_Geom","FORTRAN",Err)
-    CALL CMISSFields_Finalise(Fields,Err)
+    CALL cmfe_Fields_Initialise(Fields,Err)
+    CALL cmfe_Fields_Create(Region,Fields,Err)
+    CALL cmfe_Fields_NodesExport(Fields,"Cell_Geom","FORTRAN",Err)
+    CALL cmfe_Fields_ElementsExport(Fields,"Cell_Geom","FORTRAN",Err)
+    CALL cmfe_Fields_Finalise(Fields,Err)
   ENDIF 
 !______________________________________________________________________________________________________________
   !Create the cellml reaction with split reaction diffusion equations_set - 1 for each species
 !###################
   !Ca equations
 !###################
-  CALL CMISSEquationsSet_Initialise(CaEquationsSet,Err)
-  CALL CMISSField_Initialise(CaEquationsSetField,Err)
-  CALL CMISSEquationsSet_CreateStart(CaEquationsSetUserNumber,Region, & 
-    & GeometricField,CMISS_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
-    & CMISS_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
-    & CMISS_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE, &
+  CALL cmfe_EquationsSet_Initialise(CaEquationsSet,Err)
+  CALL cmfe_Field_Initialise(CaEquationsSetField,Err)
+  CALL cmfe_EquationsSet_CreateStart(CaEquationsSetUserNumber,Region, & 
+    & GeometricField,[cmfe_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
+    & cmfe_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
+    & cmfe_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE], &
     & CaEquationsSetFieldUserNumber,CaEquationsSetField,CaEquationsSet,Err)
   !Set the equations set to be a standard Diffusion no source problem
   !Finish creating the equations set
-  CALL CMISSEquationsSet_CreateFinish(CaEquationsSet,Err)
+  CALL cmfe_EquationsSet_CreateFinish(CaEquationsSet,Err)
 
 
   !Create the equations set dependent field variables for Ca
-  CALL CMISSField_Initialise(CaField,Err)
-  CALL CMISSEquationsSet_DependentCreateStart(CaEquationsSet,CaFieldUserNumber,CaField,Err)
-  CALL CMISSField_VariableLabelSet(CaField,CMISS_FIELD_U_VARIABLE_TYPE,"Ca Field",Err)
+  CALL cmfe_Field_Initialise(CaField,Err)
+  CALL cmfe_EquationsSet_DependentCreateStart(CaEquationsSet,CaFieldUserNumber,CaField,Err)
+  CALL cmfe_Field_VariableLabelSet(CaField,cmfe_FIELD_U_VARIABLE_TYPE,"Ca Field",Err)
   !Finish the equations set dependent field variables
-  CALL CMISSEquationsSet_DependentCreateFinish(CaEquationsSet,Err)
+  CALL cmfe_EquationsSet_DependentCreateFinish(CaEquationsSet,Err)
   !Initialise Ca dependent field
-  CALL CMISSField_ComponentValuesInitialise(CaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-    & CMISS_FIELD_VALUES_SET_TYPE,1,init_Ca,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(CaField,cmfe_FIELD_U_VARIABLE_TYPE, &
+    & cmfe_FIELD_VALUES_SET_TYPE,1,init_Ca,Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
     DO i=1,NUMBER_OF_NODES
       NODE_NUMBER = NodeNums(i,1)
-      CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+      CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
       IF(NodeDomain==ComputationalNodeNumber) THEN
         IF(NodeNums(i,2).EQ.MITO_REGION_MARKER) THEN !if node is mito-associated node, then set initial conc. to mito_init. 
-          CALL CMISSField_ParameterSetUpdateNode(CaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initCa,Err)
+          CALL cmfe_Field_ParameterSetUpdateNode(CaField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initCa,Err)
         ENDIF
       ENDIF
     ENDDO
-    CALL CMISSField_ParameterSetUpdateStart(CaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(CaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(CaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(CaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
   ENDIF
 
   !Create the equations set material field variables - Ca
   !by default 2 comps for reac diff i.e. diff coeff in 1 direction set constant spatially = 1, and storage coeff set to 1
-  CALL CMISSField_Initialise(CaMaterialsField,Err)
-  CALL CMISSEquationsSet_MaterialsCreateStart(CaEquationsSet,CaMaterialsFieldUserNumber,CaMaterialsField,Err)
-  CALL CMISSField_VariableLabelSet(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,"Ca Materials Field",Err)
+  CALL cmfe_Field_Initialise(CaMaterialsField,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateStart(CaEquationsSet,CaMaterialsFieldUserNumber,CaMaterialsField,Err)
+  CALL cmfe_Field_VariableLabelSet(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,"Ca Materials Field",Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN ! element based assignment of diffusion properties to distinguish mito diffusion from the rest
-    CALL CMISSField_ComponentInterpolationSet(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,1, & 
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,2, & 
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,3, & 
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,1, & 
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,2, & 
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,3, & 
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
   ENDIF
   !Finish the equations set materials field variables
-  CALL CMISSEquationsSet_MaterialsCreateFinish(CaEquationsSet,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateFinish(CaEquationsSet,Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
 
     DO i=1,NUMBER_OF_ELEMENTS
       ELEM_NUMBER = ElemMap(i,1)
-      CALL CMISSDecomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
+      CALL cmfe_Decomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
       IF(ElementDomain==ComputationalNodeNumber) THEN
         ELEM_LABEL = ElemMap(i,6)
         IF(ELEM_LABEL.EQ.MITO_REGION_MARKER) THEN
           !element based assignment of diffusion properties
-          CALL CMISSField_ParameterSetUpdateElement(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoCaDiffx,Err)
-          CALL CMISSField_ParameterSetUpdateElement(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoCaDiffy,Err)
-          CALL CMISSField_ParameterSetUpdateElement(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoCaDiffz,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoCaDiffx,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoCaDiffy,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoCaDiffz,Err)
         ELSE
-          CALL CMISSField_ParameterSetUpdateElement(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,caDiffx,Err)
-          CALL CMISSField_ParameterSetUpdateElement(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,caDiffy,Err)
-          CALL CMISSField_ParameterSetUpdateElement(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,caDiffz,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,caDiffx,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,caDiffy,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,caDiffz,Err)
         ENDIF
       ENDIF
     ENDDO
-    CALL CMISSField_ParameterSetUpdateStart(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   ELSE
-    CALL CMISSField_ComponentValuesInitialise(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
      & 1,caDiffx,Err) !ca diff coeff in x
-    CALL CMISSField_ComponentValuesInitialise(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
      & 2,caDiffy,Err) !ca diff coeff in y
-    CALL CMISSField_ComponentValuesInitialise(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
      & 3,caDiffz,Err) !ca diff coeff in z
   ENDIF
-  CALL CMISSField_ComponentValuesInitialise(CaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(CaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
    & 4,store_coeff,Err) ! storage coefficient
 
  
   !Set up source field for reaction diffusion equation set. Note that for the split problem subtype, the source field is not used at all.
   !iCaField
   !Might use the field for CellML input of elementary RyR calcium release
-  CALL CMISSField_Initialise(iCaField,Err)
-  CALL CMISSEquationsSet_SourceCreateStart(CaEquationsSet,iCaFieldUserNumber,iCaField,Err)
-  CALL CMISSField_VariableLabelSet(iCaField,CMISS_FIELD_U_VARIABLE_TYPE,"iCa Field",Err)
-  !CALL CMISSField_ComponentInterpolationSet(iCaField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
-  !  & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+  CALL cmfe_Field_Initialise(iCaField,Err)
+  CALL cmfe_EquationsSet_SourceCreateStart(CaEquationsSet,iCaFieldUserNumber,iCaField,Err)
+  CALL cmfe_Field_VariableLabelSet(iCaField,cmfe_FIELD_U_VARIABLE_TYPE,"iCa Field",Err)
+  !CALL cmfe_Field_ComponentInterpolationSet(iCaField,cmfe_FIELD_U_VARIABLE_TYPE,1, &
+  !  & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
   !Finish the equations set source field variables
-  CALL CMISSEquationsSet_SourceCreateFinish(CaEquationsSet,Err)
+  CALL cmfe_EquationsSet_SourceCreateFinish(CaEquationsSet,Err)
   !Initialising the iCaField to zero everywhere. Modifying for RyRs in a later loop.
-  CALL CMISSField_ComponentValuesInitialise(iCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(iCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
     & 1,iCa,Err)
 
 !###################
@@ -657,49 +664,50 @@ PROGRAM CARDIAC_ECC
     ENDDO
   ENDIF 
   CLOSE(12)
+PRINT *,'______________________________________________________________________________'
   !set up intensity field
-  CALL CMISSField_Initialise(RyRDenseField,Err)
-  CALL CMISSField_CreateStart(RyRDenseFieldUserNumber,Region,RyRDenseField,Err)
-  CALL CMISSField_TypeSet(RyRDenseField,CMISS_FIELD_GENERAL_TYPE,Err)
-  CALL CMISSField_MeshDecompositionSet(RyRDenseField,Decomposition,Err)
-  CALL CMISSField_GeometricFieldSet(RyRDenseField,GeometricField,Err)
-  CALL CMISSField_NumberOfVariablesSet(RyRDenseField,1,Err)
-  CALL CMISSField_VariableTypesSet(RyRDenseField,[CMISS_FIELD_U_VARIABLE_TYPE],Err)
-  CALL CMISSField_DataTypeSet(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_DP_TYPE,Err)
-  CALL CMISSField_DimensionSet(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_SCALAR_DIMENSION_TYPE,Err)
-  CALL CMISSField_NumberOfComponentsSet(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,1,Err)
-  CALL CMISSField_VariableLabelSet(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,"RyR Density Field",Err)
-  CALL CMISSField_ComponentMeshComponentGet(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE, & 
+  CALL cmfe_Field_Initialise(RyRDenseField,Err)
+  CALL cmfe_Field_CreateStart(RyRDenseFieldUserNumber,Region,RyRDenseField,Err)
+  CALL cmfe_Field_TypeSet(RyRDenseField,cmfe_FIELD_GENERAL_TYPE,Err)
+  CALL cmfe_Field_MeshDecompositionSet(RyRDenseField,Decomposition,Err)
+  CALL cmfe_Field_GeometricFieldSet(RyRDenseField,GeometricField,Err)
+  CALL cmfe_Field_NumberOfVariablesSet(RyRDenseField,1,Err)
+  CALL cmfe_Field_VariableTypesSet(RyRDenseField,[cmfe_FIELD_U_VARIABLE_TYPE],Err)
+  CALL cmfe_Field_DataTypeSet(RyRDenseField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_DP_TYPE,Err)
+  CALL cmfe_Field_DimensionSet(RyRDenseField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_SCALAR_DIMENSION_TYPE,Err)
+  CALL cmfe_Field_NumberOfComponentsSet(RyRDenseField,cmfe_FIELD_U_VARIABLE_TYPE,1,Err)
+  CALL cmfe_Field_VariableLabelSet(RyRDenseField,cmfe_FIELD_U_VARIABLE_TYPE,"RyR Density Field",Err)
+  CALL cmfe_Field_ComponentMeshComponentGet(GeometricField,cmfe_FIELD_U_VARIABLE_TYPE, & 
     & 1,GeometricMeshComponent,ERR)
   !Default to the geometric interpolation setup
-  CALL CMISSField_ComponentMeshComponentSet(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+  CALL cmfe_Field_ComponentMeshComponentSet(RyRDenseField,cmfe_FIELD_U_VARIABLE_TYPE,1, &
     & GeometricMeshComponent,ERR)            
   !Specify the interpolation to be same as geometric interpolation
-  CALL CMISSField_ComponentInterpolationSet(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
-    & CMISS_FIELD_NODE_BASED_INTERPOLATION,ERR)
-  CALL CMISSField_CreateFinish(RyRDenseField,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(RyRDenseField,cmfe_FIELD_U_VARIABLE_TYPE,1, &
+    & cmfe_FIELD_NODE_BASED_INTERPOLATION,ERR)
+  CALL cmfe_Field_CreateFinish(RyRDenseField,Err)
 
   !set up timelag field
-  CALL CMISSField_Initialise(RyRReleaseLagField,Err)
-  CALL CMISSField_CreateStart(RyRReleaseLagFieldUserNumber,Region,RyRReleaseLagField,Err)
-  CALL CMISSField_TypeSet(RyRReleaseLagField,CMISS_FIELD_GENERAL_TYPE,Err)
-  CALL CMISSField_MeshDecompositionSet(RyRReleaseLagField,Decomposition,Err)
-  CALL CMISSField_GeometricFieldSet(RyRReleaseLagField,GeometricField,Err)
-  CALL CMISSField_NumberOfVariablesSet(RyRReleaseLagField,1,Err)
-  CALL CMISSField_VariableTypesSet(RyRReleaseLagField,[CMISS_FIELD_U_VARIABLE_TYPE],Err)
-  CALL CMISSField_DataTypeSet(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_DP_TYPE,Err)
-  CALL CMISSField_DimensionSet(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_SCALAR_DIMENSION_TYPE,Err)
-  CALL CMISSField_NumberOfComponentsSet(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,1,Err)
-  CALL CMISSField_VariableLabelSet(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,"RyR Release Lag Field",Err)
-  CALL CMISSField_ComponentMeshComponentGet(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE, &
+  CALL cmfe_Field_Initialise(RyRReleaseLagField,Err)
+  CALL cmfe_Field_CreateStart(RyRReleaseLagFieldUserNumber,Region,RyRReleaseLagField,Err)
+  CALL cmfe_Field_TypeSet(RyRReleaseLagField,cmfe_FIELD_GENERAL_TYPE,Err)
+  CALL cmfe_Field_MeshDecompositionSet(RyRReleaseLagField,Decomposition,Err)
+  CALL cmfe_Field_GeometricFieldSet(RyRReleaseLagField,GeometricField,Err)
+  CALL cmfe_Field_NumberOfVariablesSet(RyRReleaseLagField,1,Err)
+  CALL cmfe_Field_VariableTypesSet(RyRReleaseLagField,[cmfe_FIELD_U_VARIABLE_TYPE],Err)
+  CALL cmfe_Field_DataTypeSet(RyRReleaseLagField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_DP_TYPE,Err)
+  CALL cmfe_Field_DimensionSet(RyRReleaseLagField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_SCALAR_DIMENSION_TYPE,Err)
+  CALL cmfe_Field_NumberOfComponentsSet(RyRReleaseLagField,cmfe_FIELD_U_VARIABLE_TYPE,1,Err)
+  CALL cmfe_Field_VariableLabelSet(RyRReleaseLagField,cmfe_FIELD_U_VARIABLE_TYPE,"RyR Release Lag Field",Err)
+  CALL cmfe_Field_ComponentMeshComponentGet(GeometricField,cmfe_FIELD_U_VARIABLE_TYPE, &
     & 1,GeometricMeshComponent,ERR)
   !Default to the geometric interpolation setup
-  CALL CMISSField_ComponentMeshComponentSet(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+  CALL cmfe_Field_ComponentMeshComponentSet(RyRReleaseLagField,cmfe_FIELD_U_VARIABLE_TYPE,1, &
     & GeometricMeshComponent,ERR)
   !Specify the interpolation to be same as geometric interpolation
-  CALL CMISSField_ComponentInterpolationSet(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
-    & CMISS_FIELD_NODE_BASED_INTERPOLATION,ERR)
-  CALL CMISSField_CreateFinish(RyRReleaseLagField,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(RyRReleaseLagField,cmfe_FIELD_U_VARIABLE_TYPE,1, &
+    & cmfe_FIELD_NODE_BASED_INTERPOLATION,ERR)
+  CALL cmfe_Field_CreateFinish(RyRReleaseLagField,Err)
 
   !Initialise RyR intensity Field, multiply the intensity by number of ryrs per cluster
   ! also Set RyR time lag Field
@@ -707,19 +715,19 @@ PROGRAM CARDIAC_ECC
   NonZeroNodes = 0
   DO node = 1,NUMBER_OF_NODES
     NODE_NUMBER = NodeNums(node,1)
-    CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+    CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
     IF(NodeDomain==ComputationalNodeNumber) THEN
       IF(NodeNums(node,2).EQ.MITO_REGION_MARKER) THEN !if node is mito-associated node, then don't release from there. 
-        CALL CMISSField_ParameterSetUpdateNode(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,0.0_CMISSDP,Err)
-        CALL CMISSField_ParameterSetUpdateNode(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,0.0_CMISSDP,Err)
+        CALL cmfe_Field_ParameterSetUpdateNode(RyRDenseField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,0.0_CMISSDP,Err)
+        CALL cmfe_Field_ParameterSetUpdateNode(RyRReleaseLagField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,0.0_CMISSDP,Err)
 
       ELSE
-        CALL CMISSField_ParameterSetUpdateNode(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,(NumRyRsPerCluster*RyRDensity(node,1)),Err)
-        CALL CMISSField_ParameterSetUpdateNode(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,(RyRDensity(node,2)),Err)
+        CALL cmfe_Field_ParameterSetUpdateNode(RyRDenseField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,(NumRyRsPerCluster*RyRDensity(node,1)),Err)
+        CALL cmfe_Field_ParameterSetUpdateNode(RyRReleaseLagField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,(RyRDensity(node,2)),Err)
 
       ENDIF
       IF(RyRDensity(node,1).GE.0.1_CMISSDP) THEN
@@ -727,11 +735,11 @@ PROGRAM CARDIAC_ECC
       ENDIF
     ENDIF
   ENDDO
-  CALL CMISSField_ParameterSetUpdateStart(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSField_ParameterSetUpdateFinish(RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateStart(RyRDenseField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateFinish(RyRDenseField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
-  CALL CMISSField_ParameterSetUpdateStart(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSField_ParameterSetUpdateFinish(RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateStart(RyRReleaseLagField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateFinish(RyRReleaseLagField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   WRITE(*,*) 'Number of Non-Zero RyR Nodes',NonZeroNodes
 
@@ -739,1097 +747,1096 @@ PROGRAM CARDIAC_ECC
 !###################
   !F equations
 !###################
-  CALL CMISSEquationsSet_Initialise(FEquationsSet,Err)
-  CALL CMISSField_Initialise(FEquationsSetField,Err)
-  CALL CMISSEquationsSet_CreateStart(FEquationsSetUserNumber,Region, & 
-    & GeometricField,CMISS_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
-    & CMISS_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
-    & CMISS_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE, &
+  CALL cmfe_EquationsSet_Initialise(FEquationsSet,Err)
+PRINT *,'______________________________________________________________________________'
+  CALL cmfe_Field_Initialise(FEquationsSetField,Err)
+  CALL cmfe_EquationsSet_CreateStart(FEquationsSetUserNumber,Region, & 
+    & GeometricField,[cmfe_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
+    & cmfe_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
+    & cmfe_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE], &
     & FEquationsSetFieldUserNumber,FEquationsSetField,FEquationsSet,Err)
   !Set the equations set to be a standard Diffusion no source problem
   !Finish creating the equations set
-  CALL CMISSEquationsSet_CreateFinish(FEquationsSet,Err)
+  CALL cmfe_EquationsSet_CreateFinish(FEquationsSet,Err)
 
-
+PRINT *,'______________________________________________________________________________'
   !Create the equations set dependent field variables for F
-  CALL CMISSField_Initialise(FField,Err)
-  CALL CMISSEquationsSet_DependentCreateStart(FEquationsSet,FFieldUserNumber,FField,Err)
-  CALL CMISSField_VariableLabelSet(FField,CMISS_FIELD_U_VARIABLE_TYPE,"F Field",Err)
+  CALL cmfe_Field_Initialise(FField,Err)
+  CALL cmfe_EquationsSet_DependentCreateStart(FEquationsSet,FFieldUserNumber,FField,Err)
+  CALL cmfe_Field_VariableLabelSet(FField,cmfe_FIELD_U_VARIABLE_TYPE,"F Field",Err)
   !Finish the equations set dependent field variables
-  CALL CMISSEquationsSet_DependentCreateFinish(FEquationsSet,Err)
+  CALL cmfe_EquationsSet_DependentCreateFinish(FEquationsSet,Err)
   !Initialise F dependent field
-  CALL CMISSField_ComponentValuesInitialise(FField,CMISS_FIELD_U_VARIABLE_TYPE, &
-    & CMISS_FIELD_VALUES_SET_TYPE,1,init_F,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(FField,cmfe_FIELD_U_VARIABLE_TYPE, &
+    & cmfe_FIELD_VALUES_SET_TYPE,1,init_F,Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
     DO i=1,NUMBER_OF_NODES
       NODE_NUMBER = NodeNums(i,1)
-      CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+      CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
       IF(NodeDomain==ComputationalNodeNumber) THEN
         IF(NodeNums(i,2).EQ.MITO_REGION_MARKER) THEN !if node is mito-associated node, then set initial conc. to mito_init. 
-          CALL CMISSField_ParameterSetUpdateNode(FField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initF,Err)
+          CALL cmfe_Field_ParameterSetUpdateNode(FField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initF,Err)
         ENDIF
       ENDIF
     ENDDO
-    CALL CMISSField_ParameterSetUpdateStart(FField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(FField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(FField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(FField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
   ENDIF
-
+PRINT *,'______________________________________________________________________________'
   !Create the equations set material field variables - F
-  CALL CMISSField_Initialise(FMaterialsField,Err)
-  CALL CMISSEquationsSet_MaterialsCreateStart(FEquationsSet,FMaterialsFieldUserNumber,FMaterialsField,Err)
-  CALL CMISSField_VariableLabelSet(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,"F Materials Field",Err)
+  CALL cmfe_Field_Initialise(FMaterialsField,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateStart(FEquationsSet,FMaterialsFieldUserNumber,FMaterialsField,Err)
+  CALL cmfe_Field_VariableLabelSet(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,"F Materials Field",Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN ! element based assignment of diffusion properties to distinguish mito diffusion from the rest
-    CALL CMISSField_ComponentInterpolationSet(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,1, & 
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,2, & 
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,3, & 
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,1, & 
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,2, & 
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,3, & 
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
   ENDIF
   !Finish the equations set materials field variables
-  CALL CMISSEquationsSet_MaterialsCreateFinish(FEquationsSet,Err)
-
+  CALL cmfe_EquationsSet_MaterialsCreateFinish(FEquationsSet,Err)
+PRINT *,'______________________________________________________________________________'
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
 
     DO i=1,NUMBER_OF_ELEMENTS
       ELEM_NUMBER = ElemMap(i,1)
-      CALL CMISSDecomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
+      CALL cmfe_Decomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
       IF(ElementDomain==ComputationalNodeNumber) THEN
         ELEM_LABEL = ElemMap(i,6)
         IF(ELEM_LABEL.EQ.MITO_REGION_MARKER) THEN
           !element based assignment of diffusion properties
-          CALL CMISSField_ParameterSetUpdateElement(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoFDiffx,Err)
-          CALL CMISSField_ParameterSetUpdateElement(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoFDiffy,Err)
-          CALL CMISSField_ParameterSetUpdateElement(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoFDiffz,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoFDiffx,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoFDiffy,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoFDiffz,Err)
         ELSE
-          CALL CMISSField_ParameterSetUpdateElement(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,fDiffx,Err)
-          CALL CMISSField_ParameterSetUpdateElement(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,fDiffy,Err)
-          CALL CMISSField_ParameterSetUpdateElement(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,fDiffz,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,fDiffx,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,fDiffy,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,fDiffz,Err)
         ENDIF
       ENDIF
     ENDDO
-    CALL CMISSField_ParameterSetUpdateStart(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   ELSE
-    CALL CMISSField_ComponentValuesInitialise(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
      & 1,fDiffx,Err) !f diff coeff in x
-    CALL CMISSField_ComponentValuesInitialise(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
      & 2,fDiffy,Err) !F diff coeff in y
-    CALL CMISSField_ComponentValuesInitialise(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
      & 3,fDiffz,Err) !f diff coeff in z
   ENDIF
-  CALL CMISSField_ComponentValuesInitialise(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
    & 4,store_coeff,Err) ! storage coefficient 
-
+PRINT *,'______________________________________________________________________________'
   !Set up source field for reaction diffusion equation set. Note that for the split problem subtype, the source field is not used at all.
   !iFField
-  CALL CMISSField_Initialise(iFField,Err)
-  CALL CMISSEquationsSet_SourceCreateStart(FEquationsSet,iFFieldUserNumber,iFField,Err)
-  CALL CMISSField_VariableLabelSet(iFField,CMISS_FIELD_U_VARIABLE_TYPE,"iF Field",Err)
+  CALL cmfe_Field_Initialise(iFField,Err)
+  CALL cmfe_EquationsSet_SourceCreateStart(FEquationsSet,iFFieldUserNumber,iFField,Err)
+  CALL cmfe_Field_VariableLabelSet(iFField,cmfe_FIELD_U_VARIABLE_TYPE,"iF Field",Err)
   !Finish the equations set source field variables
-  CALL CMISSEquationsSet_SourceCreateFinish(FEquationsSet,Err)
+  CALL cmfe_EquationsSet_SourceCreateFinish(FEquationsSet,Err)
   !Initialising the iField to zero everywhere. Might modify for RyRs in a later loop.
-  CALL CMISSField_ComponentValuesInitialise(iFField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(iFField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
     & 1,0.0_CMISSDP,Err)
-
+PRINT *,'F equations'
 !###################
   !FCa equations
 !###################
-  CALL CMISSEquationsSet_Initialise(FCaEquationsSet,Err)
-  CALL CMISSField_Initialise(FCaEquationsSetField,Err)
-  CALL CMISSEquationsSet_CreateStart(FCaEquationsSetUserNumber,Region, & 
-    & GeometricField,CMISS_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
-    & CMISS_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
-    & CMISS_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE, &
+  CALL cmfe_EquationsSet_Initialise(FCaEquationsSet,Err)
+  CALL cmfe_Field_Initialise(FCaEquationsSetField,Err)
+  CALL cmfe_EquationsSet_CreateStart(FCaEquationsSetUserNumber,Region, & 
+    & GeometricField,[cmfe_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
+    & cmfe_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
+    & cmfe_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE], &
     & FCaEquationsSetFieldUserNumber,FCaEquationsSetField,FCaEquationsSet,Err)
   !Set the equations set to be a standard Diffusion no source problem
   !Finish creating the equations set
-  CALL CMISSEquationsSet_CreateFinish(FCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_CreateFinish(FCaEquationsSet,Err)
 
 
   !Create the equations set dependent field variables for FCa
-  CALL CMISSField_Initialise(FCaField,Err)
-  CALL CMISSEquationsSet_DependentCreateStart(FCaEquationsSet,FCaFieldUserNumber,FCaField,Err)
-  CALL CMISSField_VariableLabelSet(FCaField,CMISS_FIELD_U_VARIABLE_TYPE,"FCa Field",Err)
+  CALL cmfe_Field_Initialise(FCaField,Err)
+  CALL cmfe_EquationsSet_DependentCreateStart(FCaEquationsSet,FCaFieldUserNumber,FCaField,Err)
+  CALL cmfe_Field_VariableLabelSet(FCaField,cmfe_FIELD_U_VARIABLE_TYPE,"FCa Field",Err)
   !Finish the equations set dependent field variables
-  CALL CMISSEquationsSet_DependentCreateFinish(FCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_DependentCreateFinish(FCaEquationsSet,Err)
   !Initialise FCa dependent field
-  CALL CMISSField_ComponentValuesInitialise(FCaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-    & CMISS_FIELD_VALUES_SET_TYPE,1,init_FCa,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(FCaField,cmfe_FIELD_U_VARIABLE_TYPE, &
+    & cmfe_FIELD_VALUES_SET_TYPE,1,init_FCa,Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
     DO i=1,NUMBER_OF_NODES
       NODE_NUMBER = NodeNums(i,1)
-      CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+      CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
       IF(NodeDomain==ComputationalNodeNumber) THEN
         IF(NodeNums(i,2).EQ.MITO_REGION_MARKER) THEN !if node is mito-associated node, then set initial conc. to mito_init. 
-          CALL CMISSField_ParameterSetUpdateNode(FCaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initFCa,Err)
+          CALL cmfe_Field_ParameterSetUpdateNode(FCaField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initFCa,Err)
         ENDIF
       ENDIF
     ENDDO
-    CALL CMISSField_ParameterSetUpdateStart(FCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(FCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(FCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(FCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
   ENDIF
 
 
   !Create the equations set material field variables - FCa
-  CALL CMISSField_Initialise(FCaMaterialsField,Err)
-  CALL CMISSEquationsSet_MaterialsCreateStart(FCaEquationsSet,FCaMaterialsFieldUserNumber,FCaMaterialsField,Err)
-  CALL CMISSField_VariableLabelSet(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,"FCa Materials Field",Err)
+  CALL cmfe_Field_Initialise(FCaMaterialsField,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateStart(FCaEquationsSet,FCaMaterialsFieldUserNumber,FCaMaterialsField,Err)
+  CALL cmfe_Field_VariableLabelSet(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,"FCa Materials Field",Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN ! element based assignment of diffusion properties to distinguish mito diffusion from the rest
-    CALL CMISSField_ComponentInterpolationSet(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,1, & 
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,2, & 
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,3, & 
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,1, & 
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,2, & 
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,3, & 
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
   ENDIF
   !Finish the equations set materials field variables
-  CALL CMISSEquationsSet_MaterialsCreateFinish(FCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateFinish(FCaEquationsSet,Err)
 
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
 
     DO i=1,NUMBER_OF_ELEMENTS
       ELEM_NUMBER = ElemMap(i,1)
-      CALL CMISSDecomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
+      CALL cmfe_Decomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
       IF(ElementDomain==ComputationalNodeNumber) THEN
         ELEM_LABEL = ElemMap(i,6)
         IF(ELEM_LABEL.EQ.MITO_REGION_MARKER) THEN
           !element based assignment of diffusion properties
-          CALL CMISSField_ParameterSetUpdateElement(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoFCaDiffx,Err)
-          CALL CMISSField_ParameterSetUpdateElement(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoFCaDiffy,Err)
-          CALL CMISSField_ParameterSetUpdateElement(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoFCaDiffz,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoFCaDiffx,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoFCaDiffy,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoFCaDiffz,Err)
         ELSE
-          CALL CMISSField_ParameterSetUpdateElement(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,fcaDiffx,Err)
-          CALL CMISSField_ParameterSetUpdateElement(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,fcaDiffy,Err)
-          CALL CMISSField_ParameterSetUpdateElement(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,fcaDiffz,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,fcaDiffx,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,fcaDiffy,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,fcaDiffz,Err)
         ENDIF
       ENDIF
     ENDDO
-    CALL CMISSField_ParameterSetUpdateStart(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   ELSE
-    CALL CMISSField_ComponentValuesInitialise(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
      & 1,fcaDiffx,Err) !fca diff coeff in x
-    CALL CMISSField_ComponentValuesInitialise(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
      & 2,fcaDiffy,Err) !fca diff coeff in y
-    CALL CMISSField_ComponentValuesInitialise(FCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(FCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
      & 3,fcaDiffz,Err) !fca diff coeff in z
   ENDIF
-  CALL CMISSField_ComponentValuesInitialise(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
    & 4,store_coeff,Err) ! storage coefficient 
 
   !Set up source field for reaction diffusion equation set. Note that for the split problem subtype, the source field is not used at all.
   !iFCaField
-  CALL CMISSField_Initialise(iFCaField,Err)
-  CALL CMISSEquationsSet_SourceCreateStart(FCaEquationsSet,iFCaFieldUserNumber,iFCaField,Err)
-  CALL CMISSField_VariableLabelSet(iFCaField,CMISS_FIELD_U_VARIABLE_TYPE,"iFCa Field",Err)
+  CALL cmfe_Field_Initialise(iFCaField,Err)
+  CALL cmfe_EquationsSet_SourceCreateStart(FCaEquationsSet,iFCaFieldUserNumber,iFCaField,Err)
+  CALL cmfe_Field_VariableLabelSet(iFCaField,cmfe_FIELD_U_VARIABLE_TYPE,"iFCa Field",Err)
   !Finish the equations set source field variables
-  CALL CMISSEquationsSet_SourceCreateFinish(FCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_SourceCreateFinish(FCaEquationsSet,Err)
   !Initialising the iCaField to zero everywhere. Modifying for RyRs in a later loop.
-  CALL CMISSField_ComponentValuesInitialise(iFCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(iFCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
     & 1,0.0_CMISSDP,Err)
-
+PRINT *,'FCa equations'
 
   !###################
   !CaM equations
   !###################
-  CALL CMISSEquationsSet_Initialise(CaMEquationsSet,Err)
-  CALL CMISSField_Initialise(CaMEquationsSetField,Err)
-  CALL CMISSEquationsSet_CreateStart(CaMEquationsSetUserNumber,Region, &
-    & GeometricField,CMISS_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
-    & CMISS_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
-    & CMISS_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE, &
+  CALL cmfe_EquationsSet_Initialise(CaMEquationsSet,Err)
+  CALL cmfe_Field_Initialise(CaMEquationsSetField,Err)
+  CALL cmfe_EquationsSet_CreateStart(CaMEquationsSetUserNumber,Region, &
+    & GeometricField,[cmfe_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
+    & cmfe_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
+    & cmfe_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE], &
     & CaMEquationsSetFieldUserNumber,CaMEquationsSetField,CaMEquationsSet,Err)
   !Set the equations set to be a standard Diffusion no source problem
   !Finish creating the equations set
-  CALL CMISSEquationsSet_CreateFinish(CaMEquationsSet,Err)
+  CALL cmfe_EquationsSet_CreateFinish(CaMEquationsSet,Err)
 
 
   !Create the equations set dependent field variables for CaM
-  CALL CMISSField_Initialise(CaMField,Err)
-  CALL CMISSEquationsSet_DependentCreateStart(CaMEquationsSet,CaMFieldUserNumber,CaMField,Err)
-  CALL CMISSField_VariableLabelSet(CaMField,CMISS_FIELD_U_VARIABLE_TYPE,"CaM Field",Err)
+  CALL cmfe_Field_Initialise(CaMField,Err)
+  CALL cmfe_EquationsSet_DependentCreateStart(CaMEquationsSet,CaMFieldUserNumber,CaMField,Err)
+  CALL cmfe_Field_VariableLabelSet(CaMField,cmfe_FIELD_U_VARIABLE_TYPE,"CaM Field",Err)
   !Finish the equations set dependent field variables
-  CALL CMISSEquationsSet_DependentCreateFinish(CaMEquationsSet,Err)
+  CALL cmfe_EquationsSet_DependentCreateFinish(CaMEquationsSet,Err)
   !Initialise CaM dependent field
-  CALL CMISSField_ComponentValuesInitialise(CaMField,CMISS_FIELD_U_VARIABLE_TYPE, &
-    & CMISS_FIELD_VALUES_SET_TYPE,1,init_CaM,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(CaMField,cmfe_FIELD_U_VARIABLE_TYPE, &
+    & cmfe_FIELD_VALUES_SET_TYPE,1,init_CaM,Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
     DO i=1,NUMBER_OF_NODES
       NODE_NUMBER = NodeNums(i,1)
-      CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+      CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
       IF(NodeDomain==ComputationalNodeNumber) THEN
         IF(NodeNums(i,2).EQ.MITO_REGION_MARKER) THEN !if node is mito-associated node, then set initial conc. to mito_init.
-          CALL CMISSField_ParameterSetUpdateNode(CaMField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initCaM,Err)
+          CALL cmfe_Field_ParameterSetUpdateNode(CaMField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initCaM,Err)
         ENDIF
       ENDIF
     ENDDO
-    CALL CMISSField_ParameterSetUpdateStart(CaMField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(CaMField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(CaMField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(CaMField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
   ENDIF
 
 
   !Create the equations set material field variables - CaM
-  CALL CMISSField_Initialise(CaMMaterialsField,Err)
-  CALL CMISSEquationsSet_MaterialsCreateStart(CaMEquationsSet,CaMMaterialsFieldUserNumber,CaMMaterialsField,Err)
-  CALL CMISSField_VariableLabelSet(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,"CaM Materials Field",Err)
+  CALL cmfe_Field_Initialise(CaMMaterialsField,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateStart(CaMEquationsSet,CaMMaterialsFieldUserNumber,CaMMaterialsField,Err)
+  CALL cmfe_Field_VariableLabelSet(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,"CaM Materials Field",Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN ! element based assignment of diffusion properties to distinguish mito diffusion from the rest
-    CALL CMISSField_ComponentInterpolationSet(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,2, &
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,3, &
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,1, &
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,2, &
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,3, &
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
   ENDIF
   !Finish the equations set materials field variables
-  CALL CMISSEquationsSet_MaterialsCreateFinish(CaMEquationsSet,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateFinish(CaMEquationsSet,Err)
 
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
 
   DO i=1,NUMBER_OF_ELEMENTS
     ELEM_NUMBER = ElemMap(i,1)
-    CALL CMISSDecomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
+    CALL cmfe_Decomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
     IF(ElementDomain==ComputationalNodeNumber) THEN
       ELEM_LABEL = ElemMap(i,6)
       IF(ELEM_LABEL.EQ.MITO_REGION_MARKER) THEN
       !element based assignment of diffusion properties
-        CALL CMISSField_ParameterSetUpdateElement(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoCaMDiffx,Err)
-        CALL CMISSField_ParameterSetUpdateElement(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoCaMDiffy,Err)
-        CALL CMISSField_ParameterSetUpdateElement(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoCaMDiffz,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoCaMDiffx,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoCaMDiffy,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoCaMDiffz,Err)
         ELSE
-          CALL CMISSField_ParameterSetUpdateElement(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,CaMDiffx,Err)
-          CALL CMISSField_ParameterSetUpdateElement(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,CaMDiffy,Err)
-          CALL CMISSField_ParameterSetUpdateElement(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-           & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,CaMDiffz,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,CaMDiffx,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,CaMDiffy,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+           & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,CaMDiffz,Err)
         ENDIF
       ENDIF
     ENDDO
-    CALL CMISSField_ParameterSetUpdateStart(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   ELSE
-    CALL CMISSField_ComponentValuesInitialise(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
       & 1,CaMDiffx,Err) !CaM diff coeff in x
-    CALL CMISSField_ComponentValuesInitialise(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
       & 2,CaMDiffy,Err) !CaM diff coeff in y
-    CALL CMISSField_ComponentValuesInitialise(CaMMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(CaMMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
       & 3,CaMDiffz,Err) !CaM diff coeff in z
     ENDIF
-    CALL CMISSField_ComponentValuesInitialise(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
       & 4,store_coeff,Err) ! storage coefficient
 
    !Set up source field for reaction diffusion equation set. Note that for the split problem subtype, the source field is not used at all.
    !iCaMField
-   CALL CMISSField_Initialise(iCaMField,Err)
-   CALL CMISSEquationsSet_SourceCreateStart(CaMEquationsSet,iCaMFieldUserNumber,iCaMField,Err)
-   CALL CMISSField_VariableLabelSet(iCaMField,CMISS_FIELD_U_VARIABLE_TYPE,"iCaM Field",Err)
+   CALL cmfe_Field_Initialise(iCaMField,Err)
+   CALL cmfe_EquationsSet_SourceCreateStart(CaMEquationsSet,iCaMFieldUserNumber,iCaMField,Err)
+   CALL cmfe_Field_VariableLabelSet(iCaMField,cmfe_FIELD_U_VARIABLE_TYPE,"iCaM Field",Err)
    !Finish the equations set source field variables
-   CALL CMISSEquationsSet_SourceCreateFinish(CaMEquationsSet,Err)
+   CALL cmfe_EquationsSet_SourceCreateFinish(CaMEquationsSet,Err)
    !Initialising the iCaField to zero everywhere. Modifying for RyRs in a later loop.
-   CALL CMISSField_ComponentValuesInitialise(iCaMField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+   CALL cmfe_Field_ComponentValuesInitialise(iCaMField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
      & 1,0.0_CMISSDP,Err)
 
-
+PRINT *,'CaM equations'
   !###################
   !CaMCa equations
   !###################
-  CALL CMISSEquationsSet_Initialise(CaMCaEquationsSet,Err)
-  CALL CMISSField_Initialise(CaMCaEquationsSetField,Err)
-  CALL CMISSEquationsSet_CreateStart(CaMCaEquationsSetUserNumber,Region, &
-    & GeometricField,CMISS_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
-    & CMISS_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
-    & CMISS_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE, &
+  CALL cmfe_EquationsSet_Initialise(CaMCaEquationsSet,Err)
+  CALL cmfe_Field_Initialise(CaMCaEquationsSetField,Err)
+  CALL cmfe_EquationsSet_CreateStart(CaMCaEquationsSetUserNumber,Region, &
+    & GeometricField,[cmfe_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
+    & cmfe_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
+    & cmfe_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE], &
     & CaMCaEquationsSetFieldUserNumber,CaMCaEquationsSetField,CaMCaEquationsSet,Err)
   !Set the equations set to be a standard Diffusion no source problem
   !Finish creating the equations set
-  CALL CMISSEquationsSet_CreateFinish(CaMCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_CreateFinish(CaMCaEquationsSet,Err)
 
 
   !Create the equations set dependent field variables for CaMCa
-  CALL CMISSField_Initialise(CaMCaField,Err)
-  CALL CMISSEquationsSet_DependentCreateStart(CaMCaEquationsSet,CaMCaFieldUserNumber,CaMCaField,Err)
-  CALL CMISSField_VariableLabelSet(CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,"CaMCa Field",Err)
+  CALL cmfe_Field_Initialise(CaMCaField,Err)
+  CALL cmfe_EquationsSet_DependentCreateStart(CaMCaEquationsSet,CaMCaFieldUserNumber,CaMCaField,Err)
+  CALL cmfe_Field_VariableLabelSet(CaMCaField,cmfe_FIELD_U_VARIABLE_TYPE,"CaMCa Field",Err)
   !Finish the equations set dependent field variables
-  CALL CMISSEquationsSet_DependentCreateFinish(CaMCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_DependentCreateFinish(CaMCaEquationsSet,Err)
   !Initialise CaMCa dependent field
-  CALL CMISSField_ComponentValuesInitialise(CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-    & CMISS_FIELD_VALUES_SET_TYPE,1,init_CaMCa,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(CaMCaField,cmfe_FIELD_U_VARIABLE_TYPE, &
+    & cmfe_FIELD_VALUES_SET_TYPE,1,init_CaMCa,Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
     DO i=1,NUMBER_OF_NODES
       NODE_NUMBER = NodeNums(i,1)
-      CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+      CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
       IF(NodeDomain==ComputationalNodeNumber) THEN
         IF(NodeNums(i,2).EQ.MITO_REGION_MARKER) THEN !if node is mito-associated node, then set initial conc. to mito_init.
-          CALL CMISSField_ParameterSetUpdateNode(CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initCaMCa,Err)
+          CALL cmfe_Field_ParameterSetUpdateNode(CaMCaField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initCaMCa,Err)
         ENDIF
       ENDIF
     ENDDO
-    CALL CMISSField_ParameterSetUpdateStart(CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(CaMCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(CaMCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
   ENDIF
 
 
   !Create the equations set material field variables - CaMCa
-  CALL CMISSField_Initialise(CaMCaMaterialsField,Err)
-  CALL CMISSEquationsSet_MaterialsCreateStart(CaMCaEquationsSet,CaMCaMaterialsFieldUserNumber,CaMCaMaterialsField,Err)
-  CALL CMISSField_VariableLabelSet(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,"CaMCa Materials Field",Err)
+  CALL cmfe_Field_Initialise(CaMCaMaterialsField,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateStart(CaMCaEquationsSet,CaMCaMaterialsFieldUserNumber,CaMCaMaterialsField,Err)
+  CALL cmfe_Field_VariableLabelSet(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,"CaMCa Materials Field",Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN ! element based assignment of diffusion properties to distinguish mito diffusion from the rest
-    CALL CMISSField_ComponentInterpolationSet(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,2, &
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,3, &
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,1, &
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,2, &
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,3, &
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
   ENDIF
   !Finish the equations set materials field variables
-  CALL CMISSEquationsSet_MaterialsCreateFinish(CaMCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateFinish(CaMCaEquationsSet,Err)
 
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
 
     DO i=1,NUMBER_OF_ELEMENTS
       ELEM_NUMBER = ElemMap(i,1)
-      CALL CMISSDecomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
+      CALL cmfe_Decomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
       IF(ElementDomain==ComputationalNodeNumber) THEN
         ELEM_LABEL = ElemMap(i,6)
         IF(ELEM_LABEL.EQ.MITO_REGION_MARKER) THEN
         !element based assignment of diffusion properties
-          CALL CMISSField_ParameterSetUpdateElement(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoCaMCaDiffx,Err)
-          CALL CMISSField_ParameterSetUpdateElement(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoCaMCaDiffy,Err)
-          CALL CMISSField_ParameterSetUpdateElement(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoCaMCaDiffz,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoCaMCaDiffx,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoCaMCaDiffy,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoCaMCaDiffz,Err)
         ELSE
-          CALL CMISSField_ParameterSetUpdateElement(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,CaMCaDiffx,Err)
-          CALL CMISSField_ParameterSetUpdateElement(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,CaMCaDiffy,Err)
-          CALL CMISSField_ParameterSetUpdateElement(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,CaMCaDiffz,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,CaMCaDiffx,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,CaMCaDiffy,Err)
+          CALL cmfe_Field_ParameterSetUpdateElement(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,CaMCaDiffz,Err)
         ENDIF
       ENDIF
      ENDDO
-     CALL CMISSField_ParameterSetUpdateStart(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-     CALL CMISSField_ParameterSetUpdateFinish(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+     CALL cmfe_Field_ParameterSetUpdateStart(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+     CALL cmfe_Field_ParameterSetUpdateFinish(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   ELSE
-    CALL CMISSField_ComponentValuesInitialise(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
       & 1,CaMCaDiffx,Err) !CaMCa diff coeff in x
-    CALL CMISSField_ComponentValuesInitialise(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
       & 2,CaMCaDiffy,Err) !CaMCa diff coeff in y
-    CALL CMISSField_ComponentValuesInitialise(CaMCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(CaMCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
       & 3,CaMCaDiffz,Err) !CaMCa diff coeff in z
   ENDIF
-  CALL CMISSField_ComponentValuesInitialise(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
     & 4,store_coeff,Err) ! storage coefficient
 
   !Set up source field for reaction diffusion equation set. Note that for the split problem subtype, the source field is not used at all.
   !iCaMCaField
-  CALL CMISSField_Initialise(iCaMCaField,Err)
-  CALL CMISSEquationsSet_SourceCreateStart(CaMCaEquationsSet,iCaMCaFieldUserNumber,iCaMCaField,Err)
-  CALL CMISSField_VariableLabelSet(iCaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,"iCaMCa Field",Err)
+  CALL cmfe_Field_Initialise(iCaMCaField,Err)
+  CALL cmfe_EquationsSet_SourceCreateStart(CaMCaEquationsSet,iCaMCaFieldUserNumber,iCaMCaField,Err)
+  CALL cmfe_Field_VariableLabelSet(iCaMCaField,cmfe_FIELD_U_VARIABLE_TYPE,"iCaMCa Field",Err)
   !Finish the equations set source field variables
-  CALL CMISSEquationsSet_SourceCreateFinish(CaMCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_SourceCreateFinish(CaMCaEquationsSet,Err)
   !Initialising the iCaField to zero everywhere. Modifying for RyRs in a later loop.
-  CALL CMISSField_ComponentValuesInitialise(iCaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(iCaMCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
     & 1,0.0_CMISSDP,Err)
 
-
+PRINT *,'CaMCa equations'
   !###################
   !ATP equations
   !###################
-  CALL CMISSEquationsSet_Initialise(ATPEquationsSet,Err)
-  CALL CMISSField_Initialise(ATPEquationsSetField,Err)
-  CALL CMISSEquationsSet_CreateStart(ATPEquationsSetUserNumber,Region, &
-    & GeometricField,CMISS_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
-    & CMISS_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
-    & CMISS_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE, &
+  CALL cmfe_EquationsSet_Initialise(ATPEquationsSet,Err)
+  CALL cmfe_Field_Initialise(ATPEquationsSetField,Err)
+  CALL cmfe_EquationsSet_CreateStart(ATPEquationsSetUserNumber,Region, &
+    & GeometricField,[cmfe_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
+    & cmfe_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
+    & cmfe_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE], &
     & ATPEquationsSetFieldUserNumber,ATPEquationsSetField,ATPEquationsSet,Err)
   !Set the equations set to be a standard Diffusion no source problem
   !Finish creating the equations set
-  CALL CMISSEquationsSet_CreateFinish(ATPEquationsSet,Err)
+  CALL cmfe_EquationsSet_CreateFinish(ATPEquationsSet,Err)
 
 
   !Create the equations set dependent field variables for ATP
-  CALL CMISSField_Initialise(ATPField,Err)
-  CALL CMISSEquationsSet_DependentCreateStart(ATPEquationsSet,ATPFieldUserNumber,ATPField,Err)
-  CALL CMISSField_VariableLabelSet(ATPField,CMISS_FIELD_U_VARIABLE_TYPE,"ATP Field",Err)
+  CALL cmfe_Field_Initialise(ATPField,Err)
+  CALL cmfe_EquationsSet_DependentCreateStart(ATPEquationsSet,ATPFieldUserNumber,ATPField,Err)
+  CALL cmfe_Field_VariableLabelSet(ATPField,cmfe_FIELD_U_VARIABLE_TYPE,"ATP Field",Err)
   !Finish the equations set dependent field variables
-  CALL CMISSEquationsSet_DependentCreateFinish(ATPEquationsSet,Err)
+  CALL cmfe_EquationsSet_DependentCreateFinish(ATPEquationsSet,Err)
   !Initialise ATP dependent field
-  CALL CMISSField_ComponentValuesInitialise(ATPField,CMISS_FIELD_U_VARIABLE_TYPE, &
-    & CMISS_FIELD_VALUES_SET_TYPE,1,init_ATP,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(ATPField,cmfe_FIELD_U_VARIABLE_TYPE, &
+    & cmfe_FIELD_VALUES_SET_TYPE,1,init_ATP,Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
     DO i=1,NUMBER_OF_NODES
       NODE_NUMBER = NodeNums(i,1)
-      CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+      CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
       IF(NodeDomain==ComputationalNodeNumber) THEN
         IF(NodeNums(i,2).EQ.MITO_REGION_MARKER) THEN !if node is mito-associated node, then set initial conc. to mito_init.
-          CALL CMISSField_ParameterSetUpdateNode(ATPField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initATP,Err)
+          CALL cmfe_Field_ParameterSetUpdateNode(ATPField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initATP,Err)
         ENDIF
       ENDIF
     ENDDO
-    CALL CMISSField_ParameterSetUpdateStart(ATPField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(ATPField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(ATPField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(ATPField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
   ENDIF
 
 
   !Create the equations set material field variables - ATP
-  CALL CMISSField_Initialise(ATPMaterialsField,Err)
-  CALL CMISSEquationsSet_MaterialsCreateStart(ATPEquationsSet,ATPMaterialsFieldUserNumber,ATPMaterialsField,Err)
-  CALL CMISSField_VariableLabelSet(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,"ATP Materials Field",Err)
+  CALL cmfe_Field_Initialise(ATPMaterialsField,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateStart(ATPEquationsSet,ATPMaterialsFieldUserNumber,ATPMaterialsField,Err)
+  CALL cmfe_Field_VariableLabelSet(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,"ATP Materials Field",Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN ! element based assignment of diffusion properties to distinguish mito diffusion from the rest
-    CALL CMISSField_ComponentInterpolationSet(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,2, &
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,3, &
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,1, &
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,2, &
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,3, &
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
   ENDIF
   !Finish the equations set materials field variables
-  CALL CMISSEquationsSet_MaterialsCreateFinish(ATPEquationsSet,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateFinish(ATPEquationsSet,Err)
 
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
 
   DO i=1,NUMBER_OF_ELEMENTS
     ELEM_NUMBER = ElemMap(i,1)
-    CALL CMISSDecomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
+    CALL cmfe_Decomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
     IF(ElementDomain==ComputationalNodeNumber) THEN
       ELEM_LABEL = ElemMap(i,6)
       IF(ELEM_LABEL.EQ.MITO_REGION_MARKER) THEN
       !element based assignment of diffusion properties
-        CALL CMISSField_ParameterSetUpdateElement(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoATPDiffx,Err)
-        CALL CMISSField_ParameterSetUpdateElement(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoATPDiffy,Err)
-        CALL CMISSField_ParameterSetUpdateElement(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoATPDiffz,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoATPDiffx,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoATPDiffy,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoATPDiffz,Err)
       ELSE
-        CALL CMISSField_ParameterSetUpdateElement(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,ATPDiffx,Err)
-        CALL CMISSField_ParameterSetUpdateElement(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,ATPDiffy,Err)
-        CALL CMISSField_ParameterSetUpdateElement(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,ATPDiffz,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,ATPDiffx,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,ATPDiffy,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,ATPDiffz,Err)
       ENDIF
     ENDIF
   ENDDO
-  CALL CMISSField_ParameterSetUpdateStart(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSField_ParameterSetUpdateFinish(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateStart(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateFinish(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   ELSE
-  CALL CMISSField_ComponentValuesInitialise(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
     & 1,ATPDiffx,Err) !ATP diff coeff in x
-  CALL CMISSField_ComponentValuesInitialise(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
     & 2,ATPDiffy,Err) !ATP diff coeff in y
-  CALL CMISSField_ComponentValuesInitialise(ATPMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(ATPMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
     & 3,ATPDiffz,Err) !ATP diff coeff in z
   ENDIF
-  CALL CMISSField_ComponentValuesInitialise(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
     & 4,store_coeff,Err) ! storage coefficient
 
   !Set up source field for reaction diffusion equation set. Note that for the split problem subtype, the source field is not used at all.
   !iATPField
-  CALL CMISSField_Initialise(iATPField,Err)
-  CALL CMISSEquationsSet_SourceCreateStart(ATPEquationsSet,iATPFieldUserNumber,iATPField,Err)
-  CALL CMISSField_VariableLabelSet(iATPField,CMISS_FIELD_U_VARIABLE_TYPE,"iATP Field",Err)
+  CALL cmfe_Field_Initialise(iATPField,Err)
+  CALL cmfe_EquationsSet_SourceCreateStart(ATPEquationsSet,iATPFieldUserNumber,iATPField,Err)
+  CALL cmfe_Field_VariableLabelSet(iATPField,cmfe_FIELD_U_VARIABLE_TYPE,"iATP Field",Err)
   !Finish the equations set source field variables
-  CALL CMISSEquationsSet_SourceCreateFinish(ATPEquationsSet,Err)
+  CALL cmfe_EquationsSet_SourceCreateFinish(ATPEquationsSet,Err)
   !Initialising the iCaField to zero everywhere. Modifying for RyRs in a later loop.
-  CALL CMISSField_ComponentValuesInitialise(iATPField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(iATPField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
     & 1,0.0_CMISSDP,Err)
 
-
+PRINT *,'ATP equations'
   !###################
   !ATPCa equations
   !###################
-  CALL CMISSEquationsSet_Initialise(ATPCaEquationsSet,Err)
-  CALL CMISSField_Initialise(ATPCaEquationsSetField,Err)
-  CALL CMISSEquationsSet_CreateStart(ATPCaEquationsSetUserNumber,Region, &
-    & GeometricField,CMISS_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
-    & CMISS_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
-    & CMISS_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE, &
+  CALL cmfe_EquationsSet_Initialise(ATPCaEquationsSet,Err)
+  CALL cmfe_Field_Initialise(ATPCaEquationsSetField,Err)
+  CALL cmfe_EquationsSet_CreateStart(ATPCaEquationsSetUserNumber,Region, &
+    & GeometricField,[cmfe_EQUATIONS_SET_CLASSICAL_FIELD_CLASS, &
+    & cmfe_EQUATIONS_SET_REACTION_DIFFUSION_EQUATION_TYPE, &
+    & cmfe_EQUATIONS_SET_CELLML_REAC_SPLIT_REAC_DIFF_SUBTYPE], &
     & ATPCaEquationsSetFieldUserNumber,ATPCaEquationsSetField,ATPCaEquationsSet,Err)
    !Set the equations set to be a standard Diffusion no source problem
    !Finish creating the equations set
-  CALL CMISSEquationsSet_CreateFinish(ATPCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_CreateFinish(ATPCaEquationsSet,Err)
 
 
   !Create the equations set dependent field variables for ATPCa
-  CALL CMISSField_Initialise(ATPCaField,Err)
-  CALL CMISSEquationsSet_DependentCreateStart(ATPCaEquationsSet,ATPCaFieldUserNumber,ATPCaField,Err)
-  CALL CMISSField_VariableLabelSet(ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,"ATPCa Field",Err)
+  CALL cmfe_Field_Initialise(ATPCaField,Err)
+  CALL cmfe_EquationsSet_DependentCreateStart(ATPCaEquationsSet,ATPCaFieldUserNumber,ATPCaField,Err)
+  CALL cmfe_Field_VariableLabelSet(ATPCaField,cmfe_FIELD_U_VARIABLE_TYPE,"ATPCa Field",Err)
   !Finish the equations set dependent field variables
-  CALL CMISSEquationsSet_DependentCreateFinish(ATPCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_DependentCreateFinish(ATPCaEquationsSet,Err)
   !Initialise ATPCa dependent field
-  CALL CMISSField_ComponentValuesInitialise(ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-    & CMISS_FIELD_VALUES_SET_TYPE,1,init_ATPCa,Err)
+  CALL cmfe_Field_ComponentValuesInitialise(ATPCaField,cmfe_FIELD_U_VARIABLE_TYPE, &
+    & cmfe_FIELD_VALUES_SET_TYPE,1,init_ATPCa,Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
     DO i=1,NUMBER_OF_NODES
       NODE_NUMBER = NodeNums(i,1)
-      CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+      CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
       IF(NodeDomain==ComputationalNodeNumber) THEN
         IF(NodeNums(i,2).EQ.MITO_REGION_MARKER) THEN !if node is mito-associated node, then set initial conc. to mito_init.
-          CALL CMISSField_ParameterSetUpdateNode(ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initATPCa,Err)
+          CALL cmfe_Field_ParameterSetUpdateNode(ATPCaField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initATPCa,Err)
         ENDIF
       ENDIF
     ENDDO
-    CALL CMISSField_ParameterSetUpdateStart(ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(ATPCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(ATPCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
   ENDIF
 
 
   !Create the equations set material field variables - ATPCa
-  CALL CMISSField_Initialise(ATPCaMaterialsField,Err)
-  CALL CMISSEquationsSet_MaterialsCreateStart(ATPCaEquationsSet,ATPCaMaterialsFieldUserNumber,ATPCaMaterialsField,Err)
-  CALL CMISSField_VariableLabelSet(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,"ATPCa Materials Field",Err)
+  CALL cmfe_Field_Initialise(ATPCaMaterialsField,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateStart(ATPCaEquationsSet,ATPCaMaterialsFieldUserNumber,ATPCaMaterialsField,Err)
+  CALL cmfe_Field_VariableLabelSet(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,"ATPCa Materials Field",Err)
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN ! element based assignment of diffusion properties to distinguish mito diffusion from the rest
-    CALL CMISSField_ComponentInterpolationSet(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,2, &
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
-    CALL CMISSField_ComponentInterpolationSet(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,3, &
-      & CMISS_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,1, &
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,2, &
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
+    CALL cmfe_Field_ComponentInterpolationSet(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,3, &
+      & cmfe_FIELD_ELEMENT_BASED_INTERPOLATION,Err)
   ENDIF
   !Finish the equations set materials field variables
-  CALL CMISSEquationsSet_MaterialsCreateFinish(ATPCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_MaterialsCreateFinish(ATPCaEquationsSet,Err)
 
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
 
   DO i=1,NUMBER_OF_ELEMENTS
     ELEM_NUMBER = ElemMap(i,1)
-    CALL CMISSDecomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
+    CALL cmfe_Decomposition_ElementDomainGet(Decomposition,ELEM_NUMBER,ElementDomain,Err)
     IF(ElementDomain==ComputationalNodeNumber) THEN
       ELEM_LABEL = ElemMap(i,6)
       IF(ELEM_LABEL.EQ.MITO_REGION_MARKER) THEN
       !element based assignment of diffusion properties
-        CALL CMISSField_ParameterSetUpdateElement(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoATPCaDiffx,Err)
-        CALL CMISSField_ParameterSetUpdateElement(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoATPCaDiffy,Err)
-        CALL CMISSField_ParameterSetUpdateElement(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoATPCaDiffz,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,mitoATPCaDiffx,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,mitoATPCaDiffy,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,mitoATPCaDiffz,Err)
       ELSE
-        CALL CMISSField_ParameterSetUpdateElement(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,ATPCaDiffx,Err)
-        CALL CMISSField_ParameterSetUpdateElement(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,ATPCaDiffy,Err)
-        CALL CMISSField_ParameterSetUpdateElement(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,ATPCaDiffz,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,1,ATPCaDiffx,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,2,ATPCaDiffy,Err)
+        CALL cmfe_Field_ParameterSetUpdateElement(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,ELEM_NUMBER,3,ATPCaDiffz,Err)
       ENDIF
     ENDIF
   ENDDO
-  CALL CMISSField_ParameterSetUpdateStart(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSField_ParameterSetUpdateFinish(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateStart(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateFinish(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   ELSE
-    CALL CMISSField_ComponentValuesInitialise(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
       & 1,ATPCaDiffx,Err) !ATPCa diff coeff in x
-    CALL CMISSField_ComponentValuesInitialise(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
       & 2,ATPCaDiffy,Err) !ATPCa diff coeff in y
-    CALL CMISSField_ComponentValuesInitialise(ATPCaMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(ATPCaMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
       & 3,ATPCaDiffz,Err) !ATPCa diff coeff in z
   ENDIF
-  CALL CMISSField_ComponentValuesInitialise(FMaterialsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(FMaterialsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
     & 4,store_coeff,Err) ! storage coefficient
 
   !Set up source field for reaction diffusion equation set. Note that for the split problem subtype, the source field is not used at all.
   !iATPCaField
-  CALL CMISSField_Initialise(iATPCaField,Err)
-  CALL CMISSEquationsSet_SourceCreateStart(ATPCaEquationsSet,iATPCaFieldUserNumber,iATPCaField,Err)
-  CALL CMISSField_VariableLabelSet(iATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,"iATPCa Field",Err)
+  CALL cmfe_Field_Initialise(iATPCaField,Err)
+  CALL cmfe_EquationsSet_SourceCreateStart(ATPCaEquationsSet,iATPCaFieldUserNumber,iATPCaField,Err)
+  CALL cmfe_Field_VariableLabelSet(iATPCaField,cmfe_FIELD_U_VARIABLE_TYPE,"iATPCa Field",Err)
   !Finish the equations set source field variables
-  CALL CMISSEquationsSet_SourceCreateFinish(ATPCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_SourceCreateFinish(ATPCaEquationsSet,Err)
   !Initialising the iCaField to zero everywhere. Modifying for RyRs in a later loop.
-  CALL CMISSField_ComponentValuesInitialise(iATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+  CALL cmfe_Field_ComponentValuesInitialise(iATPCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
     & 1,0.0_CMISSDP,Err)
 
-
+PRINT *,'ATPCa equations'
 !###################
   !CaTnC
 !###################
-  CALL CMISSField_Initialise(CaTnCField,Err)
-  CALL CMISSField_CreateStart(CaTnCFieldUserNumber,Region,CaTnCField,Err)
-  CALL CMISSField_TypeSet(CaTnCField,CMISS_FIELD_GENERAL_TYPE,Err)
-  CALL CMISSField_MeshDecompositionSet(CaTnCField,Decomposition,Err)
-  CALL CMISSField_GeometricFieldSet(CaTnCField,GeometricField,Err)
-  CALL CMISSField_NumberOfVariablesSet(CaTnCField,1,Err)
-  CALL CMISSField_VariableTypesSet(CaTnCField,[CMISS_FIELD_U_VARIABLE_TYPE],Err)
-  CALL CMISSField_DataTypeSet(CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_DP_TYPE,Err)
-  CALL CMISSField_DimensionSet(CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_SCALAR_DIMENSION_TYPE,Err)
-  CALL CMISSField_NumberOfComponentsSet(CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,1,Err)
-  CALL CMISSField_VariableLabelSet(CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,"CaTnC Field",Err)
-  CALL CMISSField_ComponentMeshComponentGet(GeometricField,CMISS_FIELD_U_VARIABLE_TYPE, & 
+  CALL cmfe_Field_Initialise(CaTnCField,Err)
+  CALL cmfe_Field_CreateStart(CaTnCFieldUserNumber,Region,CaTnCField,Err)
+  CALL cmfe_Field_TypeSet(CaTnCField,cmfe_FIELD_GENERAL_TYPE,Err)
+  CALL cmfe_Field_MeshDecompositionSet(CaTnCField,Decomposition,Err)
+  CALL cmfe_Field_GeometricFieldSet(CaTnCField,GeometricField,Err)
+  CALL cmfe_Field_NumberOfVariablesSet(CaTnCField,1,Err)
+  CALL cmfe_Field_VariableTypesSet(CaTnCField,[cmfe_FIELD_U_VARIABLE_TYPE],Err)
+  CALL cmfe_Field_DataTypeSet(CaTnCField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_DP_TYPE,Err)
+  CALL cmfe_Field_DimensionSet(CaTnCField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_SCALAR_DIMENSION_TYPE,Err)
+  CALL cmfe_Field_NumberOfComponentsSet(CaTnCField,cmfe_FIELD_U_VARIABLE_TYPE,1,Err)
+  CALL cmfe_Field_VariableLabelSet(CaTnCField,cmfe_FIELD_U_VARIABLE_TYPE,"CaTnC Field",Err)
+  CALL cmfe_Field_ComponentMeshComponentGet(GeometricField,cmfe_FIELD_U_VARIABLE_TYPE, & 
     & 1,GeometricMeshComponent,ERR)
   !Default to the geometric interpolation setup
-  CALL CMISSField_ComponentMeshComponentSet(CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
+  CALL cmfe_Field_ComponentMeshComponentSet(CaTnCField,cmfe_FIELD_U_VARIABLE_TYPE,1, &
     & GeometricMeshComponent,ERR)            
   !Specify the interpolation to be same as geometric interpolation
-  CALL CMISSField_ComponentInterpolationSet(CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,1, &
-    & CMISS_FIELD_NODE_BASED_INTERPOLATION,ERR)
-  CALL CMISSField_CreateFinish(CaTnCField,Err)
+  CALL cmfe_Field_ComponentInterpolationSet(CaTnCField,cmfe_FIELD_U_VARIABLE_TYPE,1, &
+    & cmfe_FIELD_NODE_BASED_INTERPOLATION,ERR)
+  CALL cmfe_Field_CreateFinish(CaTnCField,Err)
   !Initialise CaTnC concentration to equilibrium value
   !Set the values to be nodally varying - mito nodes with different concentrations than myo regions
   IF(WITH_MITO_ELEMENTS.EQ.0) THEN
-    CALL CMISSField_ComponentValuesInitialise(CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE, &
+    CALL cmfe_Field_ComponentValuesInitialise(CaTnCField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE, &
       & 1,init_CaTnC,Err)
   ELSE
     DO node=1,NUMBER_OF_NODES
       NODE_NUMBER=NodeNums(node,1)
-      CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+      CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
       IF(NodeDomain==ComputationalNodeNumber) THEN
         IF(NodeNums(node,2).EQ.MITO_BD_MARKER .OR. NodeNums(node,2).EQ.MITO_REGION_MARKER) THEN
-          CALL CMISSField_ParameterSetUpdateNode(CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initCaTnC,Err)
+          CALL cmfe_Field_ParameterSetUpdateNode(CaTnCField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,mito_initCaTnC,Err)
         ELSE
-          CALL CMISSField_ParameterSetUpdateNode(CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE, &
-            & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_CaTnC,Err)
+          CALL cmfe_Field_ParameterSetUpdateNode(CaTnCField,cmfe_FIELD_U_VARIABLE_TYPE, &
+            & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_CaTnC,Err)
         ENDIF
       ENDIF
     ENDDO  
-    CALL CMISSField_ParameterSetUpdateStart(CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(CaTnCField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(CaTnCField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   ENDIF  
 !_____________________________________________________________________________________________________________________
   !Start to set up CellML Fields
 
   !Create the CellML environment
-  CALL CMISSCellML_Initialise(CellML,Err)
-  CALL CMISSCellML_CreateStart(CellMLUserNumber,Region,CellML,Err)
+  CALL cmfe_CellML_Initialise(CellML,Err)
+  CALL cmfe_CellML_CreateStart(CellMLUserNumber,Region,CellML,Err)
   !Import ryr release and buffer source model from a file
-  CALL CMISSCellML_ModelImport(CellML,RyRModel,ryrModelIndex,Err)
-  ! set iCa as known so that it can be set as spatially varying in opencmiss.
-  !CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/iCa",Err)
-  ! set RyRDensity as known so that it can be set as spatially varying in opencmiss.
-  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/iCa",Err)
-  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/ryrDensity",Err)
-  CALL CMISSCellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/timelag",Err)
+  CALL cmfe_CellML_ModelImport(CellML,RyRModel,ryrModelIndex,Err)
+  ! set iCa as known so that it can be set as spatially varying in opencmfe_.
+  !CALL cmfe_CellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/iCa",Err)
+  ! set RyRDensity as known so that it can be set as spatially varying in opencmfe_.
+  CALL cmfe_CellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/iCa",Err)
+  CALL cmfe_CellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/ryrDensity",Err)
+  CALL cmfe_CellML_VariableSetAsKnown(CellML,ryrModelIndex,"CRU/timelag",Err)
 
   !to get from the CellML side. variables in cellml model that are not state variables, but are dependent on independent and state variables. 
   !- components of intermediate field
   !fluxes of the different buffers and CaRUs that I want to get out as intermediate variables
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"CRU/Jryr",Err)
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"FluoBuffer/Jfluo",Err)
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"TnCBuffer/Jtnc",Err)
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"ATPBuffer/JATP",Err)
-  CALL CMISSCellML_VariableSetAsWanted(CellML,ryrModelIndex,"CaMBuffer/JCaM",Err)
+  CALL cmfe_CellML_VariableSetAsWanted(CellML,ryrModelIndex,"CRU/Jryr",Err)
+  CALL cmfe_CellML_VariableSetAsWanted(CellML,ryrModelIndex,"FluoBuffer/Jfluo",Err)
+  CALL cmfe_CellML_VariableSetAsWanted(CellML,ryrModelIndex,"TnCBuffer/Jtnc",Err)
+  CALL cmfe_CellML_VariableSetAsWanted(CellML,ryrModelIndex,"ATPBuffer/JATP",Err)
+  CALL cmfe_CellML_VariableSetAsWanted(CellML,ryrModelIndex,"CaMBuffer/JCaM",Err)
 
   !Finish the CellML environment
-  CALL CMISSCellML_CreateFinish(CellML,Err)
+  CALL cmfe_CellML_CreateFinish(CellML,Err)
 
-  !Start the creation of CellML <--> OpenCMISS field maps
-  !Mapping free calcium in opencmiss to that in cellml.
-  CALL CMISSCellML_FieldMapsCreateStart(CellML,Err)
-  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CRU/Ca_free",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/Ca_free",CMISS_FIELD_VALUES_SET_TYPE, &
-    & CaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  !Start the creation of CellML <--> Opencmfe_ field maps
+  !Mapping free calcium in opencmfe_ to that in cellml.
+  CALL cmfe_CellML_FieldMapsCreateStart(CellML,Err)
+  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,CaField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"CRU/Ca_free",cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/Ca_free",cmfe_FIELD_VALUES_SET_TYPE, &
+    & CaField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
    !Mapping iCaField to iCa in the cellml model
-  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,iCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CRU/iCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/iCa",CMISS_FIELD_VALUES_SET_TYPE, &
-    & iCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,iCaField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"CRU/iCa",cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/iCa",cmfe_FIELD_VALUES_SET_TYPE, &
+    & iCaField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
    !Mapping RyRDenseField to RyRDensity in the cellml model
-  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CRU/ryrDensity",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/ryrDensity",CMISS_FIELD_VALUES_SET_TYPE, &
-    & RyRDenseField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,RyRDenseField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"CRU/ryrDensity",cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/ryrDensity",cmfe_FIELD_VALUES_SET_TYPE, &
+    & RyRDenseField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping RyRReleaseLagField to timelag in the cellml model
-  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CRU/timelag",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/timelag",CMISS_FIELD_VALUES_SET_TYPE, &
-    & RyRReleaseLagField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,RyRReleaseLagField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"CRU/timelag",cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CRU/timelag",cmfe_FIELD_VALUES_SET_TYPE, &
+    & RyRReleaseLagField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping Buffer-Complex resting values of cellml model to appropriate fields set up above
 
    !Mapping F
-  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,FField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"FluoBuffer/Fluo_free",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"FluoBuffer/Fluo_free",CMISS_FIELD_VALUES_SET_TYPE, &
-    & FField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,FField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"FluoBuffer/Fluo_free",cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"FluoBuffer/Fluo_free",cmfe_FIELD_VALUES_SET_TYPE, &
+    & FField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
    !Mapping FCa
-  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,FCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"FluoBuffer/FluoCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"FluoBuffer/FluoCa",CMISS_FIELD_VALUES_SET_TYPE, &
-    & FCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,FCaField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"FluoBuffer/FluoCa",cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"FluoBuffer/FluoCa",cmfe_FIELD_VALUES_SET_TYPE, &
+    & FCaField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
    !Mapping CaTnC
-  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"TnCBuffer/CaTnC",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"TnCBuffer/CaTnC",CMISS_FIELD_VALUES_SET_TYPE, &
-    & CaTnCField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,CaTnCField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"TnCBuffer/CaTnC",cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"TnCBuffer/CaTnC",cmfe_FIELD_VALUES_SET_TYPE, &
+    & CaTnCField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping CaM
-  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaMField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CaMBuffer/CaM_free",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CaMBuffer/CaM_free",CMISS_FIELD_VALUES_SET_TYPE, &
-    & CaMField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,CaMField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"CaMBuffer/CaM_free",cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CaMBuffer/CaM_free",cmfe_FIELD_VALUES_SET_TYPE, &
+    & CaMField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping CaMCa
-  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"CaMBuffer/CaMCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CaMBuffer/CaMCa",CMISS_FIELD_VALUES_SET_TYPE, &
-    & CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,CaMCaField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"CaMBuffer/CaMCa",cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"CaMBuffer/CaMCa",cmfe_FIELD_VALUES_SET_TYPE, &
+    & CaMCaField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping ATP
-  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,ATPField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"ATPBuffer/ATP_free",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"ATPBuffer/ATP_free",CMISS_FIELD_VALUES_SET_TYPE, &
-    & ATPField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,ATPField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"ATPBuffer/ATP_free",cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"ATPBuffer/ATP_free",cmfe_FIELD_VALUES_SET_TYPE, &
+    & ATPField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   !Mapping ATPCa
-  CALL CMISSCellML_CreateFieldToCellMLMap(CellML,ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE, &
-    & ryrModelIndex,"ATPBuffer/ATPCa",CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSCellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"ATPBuffer/ATPCa",CMISS_FIELD_VALUES_SET_TYPE, &
-    & ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateFieldToCellMLMap(CellML,ATPCaField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE, &
+    & ryrModelIndex,"ATPBuffer/ATPCa",cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_CreateCellMLToFieldMap(CellML,ryrModelIndex,"ATPBuffer/ATPCa",cmfe_FIELD_VALUES_SET_TYPE, &
+    & ATPCaField,cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
-  !Finish the creation of CellML <--> OpenCMISS field maps
-  CALL CMISSCellML_FieldMapsCreateFinish(CellML,Err)
+  !Finish the creation of CellML <--> Opencmfe_ field maps
+  CALL cmfe_CellML_FieldMapsCreateFinish(CellML,Err)
 
 
   !Start the creation of the CellML models field. This field is an integer field that stores which nodes have which cellml model
-  CALL CMISSField_Initialise(CellMLModelsField,Err)
-  CALL CMISSCellML_ModelsFieldCreateStart(CellML, &
+  CALL cmfe_Field_Initialise(CellMLModelsField,Err)
+  CALL cmfe_CellML_ModelsFieldCreateStart(CellML, &
     & CellMLModelsFieldUserNumber,CellMLModelsField,Err)
   !Finish the creation of the CellML models field
-  CALL CMISSCellML_ModelsFieldCreateFinish(CellML,Err)
+  CALL cmfe_CellML_ModelsFieldCreateFinish(CellML,Err)
 
   !By default all field parameters have default model value of 1, i.e. the first model. 
   ! assigning the bufferNryr cellml model (model 1) for all nodes.
   IF(MODEL_ON.EQ.1) THEN 
-    CALL CMISSField_ComponentValuesInitialise(CellMLModelsField, & 
-      & CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1,1_CMISSIntg,Err)
+    CALL cmfe_Field_ComponentValuesInitialise(CellMLModelsField, & 
+      & cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,1,1_CMISSIntg,Err)
     IF(WITH_MITO_ELEMENTS.EQ.1) THEN
       DO node=1,NUMBER_OF_NODES
         NODE_NUMBER=NodeNums(node,1)
-        CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+        CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
         IF(NodeDomain==ComputationalNodeNumber) THEN
           IF(NodeNums(node,2).EQ.MITO_REGION_MARKER) THEN
-            CALL CMISSField_ParameterSetUpdateNode(CellMLModelsField,CMISS_FIELD_U_VARIABLE_TYPE, &
-              & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,0_CMISSIntg,Err)
+            CALL cmfe_Field_ParameterSetUpdateNode(CellMLModelsField,cmfe_FIELD_U_VARIABLE_TYPE, &
+              & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,0_CMISSIntg,Err)
           ENDIF
         ENDIF
       ENDDO  
-      CALL CMISSField_ParameterSetUpdateStart(CellMLModelsField, &
-        & CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-      CALL CMISSField_ParameterSetUpdateFinish(CellMLModelsField, &
-        & CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+      CALL cmfe_Field_ParameterSetUpdateStart(CellMLModelsField, &
+        & cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+      CALL cmfe_Field_ParameterSetUpdateFinish(CellMLModelsField, &
+        & cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
     ENDIF
   ELSE
-    CALL CMISSField_ComponentValuesInitialise(CellMLModelsField, & 
-      & CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,1,0_CMISSIntg,Err)
+    CALL cmfe_Field_ComponentValuesInitialise(CellMLModelsField, & 
+      & cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,1,0_CMISSIntg,Err)
   ENDIF
-  CALL CMISSField_ParameterSetUpdateStart(CellMLModelsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSField_ParameterSetUpdateFinish(CellMLModelsField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateStart(CellMLModelsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateFinish(CellMLModelsField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
   !Start the creation of the CellML state field
-  CALL CMISSField_Initialise(CellMLStateField,Err)
-  CALL CMISSCellML_StateFieldCreateStart(CellML, &
+  CALL cmfe_Field_Initialise(CellMLStateField,Err)
+  CALL cmfe_CellML_StateFieldCreateStart(CellML, &
     & CellMLStateFieldUserNumber,CellMLStateField,Err)
   !Finish the creation of the CellML state field
-  CALL CMISSCellML_StateFieldCreateFinish(CellML,Err)
-  CALL CMISSField_ParameterSetUpdateStart(CellMLStateField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSField_ParameterSetUpdateFinish(CellMLStateField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_StateFieldCreateFinish(CellML,Err)
+  CALL cmfe_Field_ParameterSetUpdateStart(CellMLStateField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateFinish(CellMLStateField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
 
   !Start the creation of the CellML intermediate field
-  CALL CMISSField_Initialise(CellMLIntermediateField,Err)
-  CALL CMISSCellML_IntermediateFieldCreateStart(CellML, &
+  CALL cmfe_Field_Initialise(CellMLIntermediateField,Err)
+  CALL cmfe_CellML_IntermediateFieldCreateStart(CellML, &
     & CellMLIntermediateFieldUserNumber,CellMLIntermediateField,Err)
   !Finish the creation of the CellML intermediate field
-  CALL CMISSCellML_IntermediateFieldCreateFinish(CellML,Err)
-  CALL CMISSField_ParameterSetUpdateStart(CellMLIntermediateField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSField_ParameterSetUpdateFinish(CellMLIntermediateField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_CellML_IntermediateFieldCreateFinish(CellML,Err)
+  CALL cmfe_Field_ParameterSetUpdateStart(CellMLIntermediateField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateFinish(CellMLIntermediateField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
 
   !Start the creation of CellML parameters field
-  CALL CMISSField_Initialise(CellMLParametersField,Err)
-  CALL CMISSCellML_ParametersFieldCreateStart(CellML, &
+  CALL cmfe_Field_Initialise(CellMLParametersField,Err)
+  CALL cmfe_CellML_ParametersFieldCreateStart(CellML, &
     & CellMLParametersFieldUserNumber,CellMLParametersField,Err)
   !Finish the creation of CellML parameters
-  CALL CMISSCellML_ParametersFieldCreateFinish(CellML,Err)
+  CALL cmfe_CellML_ParametersFieldCreateFinish(CellML,Err)
 
-  CALL CMISSField_ParameterSetUpdateStart(CellMLParametersField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-  CALL CMISSField_ParameterSetUpdateFinish(CellMLParametersField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateStart(CellMLParametersField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+  CALL cmfe_Field_ParameterSetUpdateFinish(CellMLParametersField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
 !_____________________________________________________________________________________________________________
  
   !Create the equations set equations for Ca
-  CALL CMISSEquations_Initialise(CaEquations,Err)
-  CALL CMISSEquationsSet_EquationsCreateStart(CaEquationsSet,CaEquations,Err)
+  CALL cmfe_Equations_Initialise(CaEquations,Err)
+  CALL cmfe_EquationsSet_EquationsCreateStart(CaEquationsSet,CaEquations,Err)
   !Set the equations matrices sparsity type
-  CALL CMISSEquations_SparsityTypeSet(CaEquations,CMISS_EQUATIONS_SPARSE_MATRICES,Err)
+  CALL cmfe_Equations_SparsityTypeSet(CaEquations,cmfe_EQUATIONS_SPARSE_MATRICES,Err)
   !Set the equations set output
-  CALL CMISSEquations_OutputTypeSet(CaEquations,CMISS_EQUATIONS_NO_OUTPUT,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsTimingOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsMatrixOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsElementMatrixOutput,Err)
+  CALL cmfe_Equations_OutputTypeSet(CaEquations,cmfe_EQUATIONS_NO_OUTPUT,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsTimingOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsMatrixOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsElementMatrixOutput,Err)
   !Finish the equations set equations
-  CALL CMISSEquationsSet_EquationsCreateFinish(CaEquationsSet,Err)
+  CALL cmfe_EquationsSet_EquationsCreateFinish(CaEquationsSet,Err)
 
   !Create the equations set equations for F
-  CALL CMISSEquations_Initialise(FEquations,Err)
-  CALL CMISSEquationsSet_EquationsCreateStart(FEquationsSet,FEquations,Err)
+  CALL cmfe_Equations_Initialise(FEquations,Err)
+  CALL cmfe_EquationsSet_EquationsCreateStart(FEquationsSet,FEquations,Err)
   !Set the equations matrices sparsity type
-  CALL CMISSEquations_SparsityTypeSet(FEquations,CMISS_EQUATIONS_SPARSE_MATRICES,Err)
+  CALL cmfe_Equations_SparsityTypeSet(FEquations,cmfe_EQUATIONS_SPARSE_MATRICES,Err)
   !Set the equations set output
-  CALL CMISSEquations_OutputTypeSet(FEquations,CMISS_EQUATIONS_NO_OUTPUT,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsTimingOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsMatrixOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsElementMatrixOutput,Err)
+  CALL cmfe_Equations_OutputTypeSet(FEquations,cmfe_EQUATIONS_NO_OUTPUT,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsTimingOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsMatrixOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsElementMatrixOutput,Err)
   !Finish the equations set equations
-  CALL CMISSEquationsSet_EquationsCreateFinish(FEquationsSet,Err)
+  CALL cmfe_EquationsSet_EquationsCreateFinish(FEquationsSet,Err)
 
   !Create the equations set equations for FCa
-  CALL CMISSEquations_Initialise(FCaEquations,Err)
-  CALL CMISSEquationsSet_EquationsCreateStart(FCaEquationsSet,FCaEquations,Err)
+  CALL cmfe_Equations_Initialise(FCaEquations,Err)
+  CALL cmfe_EquationsSet_EquationsCreateStart(FCaEquationsSet,FCaEquations,Err)
   !Set the equations matrices sparsity type
-  CALL CMISSEquations_SparsityTypeSet(FCaEquations,CMISS_EQUATIONS_SPARSE_MATRICES,Err)
+  CALL cmfe_Equations_SparsityTypeSet(FCaEquations,cmfe_EQUATIONS_SPARSE_MATRICES,Err)
   !Set the equations set output
-  CALL CMISSEquations_OutputTypeSet(FCaEquations,CMISS_EQUATIONS_NO_OUTPUT,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsTimingOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsMatrixOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsElementMatrixOutput,Err)
+  CALL cmfe_Equations_OutputTypeSet(FCaEquations,cmfe_EQUATIONS_NO_OUTPUT,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsTimingOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsMatrixOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsElementMatrixOutput,Err)
   !Finish the equations set equations
-  CALL CMISSEquationsSet_EquationsCreateFinish(FCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_EquationsCreateFinish(FCaEquationsSet,Err)
 
   !Create the equations set equations for CaM
-  CALL CMISSEquations_Initialise(CaMEquations,Err)
-  CALL CMISSEquationsSet_EquationsCreateStart(CaMEquationsSet,CaMEquations,Err)
+  CALL cmfe_Equations_Initialise(CaMEquations,Err)
+  CALL cmfe_EquationsSet_EquationsCreateStart(CaMEquationsSet,CaMEquations,Err)
   !Set the equations matrices sparsity type
-  CALL CMISSEquations_SparsityTypeSet(CaMEquations,CMISS_EQUATIONS_SPARSE_MATRICES,Err)
+  CALL cmfe_Equations_SparsityTypeSet(CaMEquations,cmfe_EQUATIONS_SPARSE_MATRICES,Err)
   !Set the equations set output
-  CALL CMISSEquations_OutputTypeSet(CaMEquations,CMISS_EQUATIONS_NO_OUTPUT,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsTimingOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsMatrixOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsElementMatrixOutput,Err)
+  CALL cmfe_Equations_OutputTypeSet(CaMEquations,cmfe_EQUATIONS_NO_OUTPUT,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsTimingOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsMatrixOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsElementMatrixOutput,Err)
   !Finish the equations set equations
-  CALL CMISSEquationsSet_EquationsCreateFinish(CaMEquationsSet,Err)
+  CALL cmfe_EquationsSet_EquationsCreateFinish(CaMEquationsSet,Err)
 
   !Create the equations set equations for CaMCa
-  CALL CMISSEquations_Initialise(CaMCaEquations,Err)
-  CALL CMISSEquationsSet_EquationsCreateStart(CaMCaEquationsSet,CaMCaEquations,Err)
+  CALL cmfe_Equations_Initialise(CaMCaEquations,Err)
+  CALL cmfe_EquationsSet_EquationsCreateStart(CaMCaEquationsSet,CaMCaEquations,Err)
   !Set the equations matrices sparsity type
-  CALL CMISSEquations_SparsityTypeSet(CaMCaEquations,CMISS_EQUATIONS_SPARSE_MATRICES,Err)
+  CALL cmfe_Equations_SparsityTypeSet(CaMCaEquations,cmfe_EQUATIONS_SPARSE_MATRICES,Err)
   !Set the equations set output
-  CALL CMISSEquations_OutputTypeSet(CaMCaEquations,CMISS_EQUATIONS_NO_OUTPUT,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsTimingOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsMatrixOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsElementMatrixOutput,Err)
+  CALL cmfe_Equations_OutputTypeSet(CaMCaEquations,cmfe_EQUATIONS_NO_OUTPUT,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsTimingOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsMatrixOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsElementMatrixOutput,Err)
   !Finish the equations set equations
-  CALL CMISSEquationsSet_EquationsCreateFinish(CaMCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_EquationsCreateFinish(CaMCaEquationsSet,Err)
 
   !Create the equations set equations for ATP
-  CALL CMISSEquations_Initialise(ATPEquations,Err)
-  CALL CMISSEquationsSet_EquationsCreateStart(ATPEquationsSet,ATPEquations,Err)
+  CALL cmfe_Equations_Initialise(ATPEquations,Err)
+  CALL cmfe_EquationsSet_EquationsCreateStart(ATPEquationsSet,ATPEquations,Err)
   !Set the equations matrices sparsity type
-  CALL CMISSEquations_SparsityTypeSet(ATPEquations,CMISS_EQUATIONS_SPARSE_MATRICES,Err)
+  CALL cmfe_Equations_SparsityTypeSet(ATPEquations,cmfe_EQUATIONS_SPARSE_MATRICES,Err)
   !Set the equations set output
-  CALL CMISSEquations_OutputTypeSet(ATPEquations,CMISS_EQUATIONS_NO_OUTPUT,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsTimingOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsMatrixOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsElementMatrixOutput,Err)
+  CALL cmfe_Equations_OutputTypeSet(ATPEquations,cmfe_EQUATIONS_NO_OUTPUT,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsTimingOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsMatrixOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsElementMatrixOutput,Err)
   !Finish the equations set equations
-  CALL CMISSEquationsSet_EquationsCreateFinish(ATPEquationsSet,Err)
+  CALL cmfe_EquationsSet_EquationsCreateFinish(ATPEquationsSet,Err)
 
   !Create the equations set equations for ATPCa
-  CALL CMISSEquations_Initialise(ATPCaEquations,Err)
-  CALL CMISSEquationsSet_EquationsCreateStart(ATPCaEquationsSet,ATPCaEquations,Err)
+  CALL cmfe_Equations_Initialise(ATPCaEquations,Err)
+  CALL cmfe_EquationsSet_EquationsCreateStart(ATPCaEquationsSet,ATPCaEquations,Err)
   !Set the equations matrices sparsity type
-  CALL CMISSEquations_SparsityTypeSet(ATPCaEquations,CMISS_EQUATIONS_SPARSE_MATRICES,Err)
+  CALL cmfe_Equations_SparsityTypeSet(ATPCaEquations,cmfe_EQUATIONS_SPARSE_MATRICES,Err)
   !Set the equations set output
-  CALL CMISSEquations_OutputTypeSet(ATPCaEquations,CMISS_EQUATIONS_NO_OUTPUT,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsTimingOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsMatrixOutput,Err)
-  !CALL CMISSEquationsOutputTypeSet(Equations,CMISSEquationsElementMatrixOutput,Err)
+  CALL cmfe_Equations_OutputTypeSet(ATPCaEquations,cmfe_EQUATIONS_NO_OUTPUT,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsTimingOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsMatrixOutput,Err)
+  !CALL cmfe_EquationsOutputTypeSet(Equations,cmfe_EquationsElementMatrixOutput,Err)
   !Finish the equations set equations
-  CALL CMISSEquationsSet_EquationsCreateFinish(ATPCaEquationsSet,Err)
+  CALL cmfe_EquationsSet_EquationsCreateFinish(ATPCaEquationsSet,Err)
 
 !____________________________________________________________________________________________________________
 
   WRITE(*,*) 'Create the problem'
-  CALL CMISSProblem_Initialise(Problem,Err)
-  CALL CMISSProblem_CreateStart(ProblemUserNumber,Problem,Err)
+  CALL cmfe_Problem_Initialise(Problem,Err)
+  CALL cmfe_Problem_CreateStart(ProblemUserNumber,[cmfe_PROBLEM_CLASSICAL_FIELD_CLASS, &
+    & cmfe_PROBLEM_REACTION_DIFFUSION_EQUATION_TYPE,cmfe_PROBLEM_CELLML_REAC_INTEG_REAC_DIFF_STRANG_SPLIT_SUBTYPE],Problem,Err)
   !Set the problem to be a strang split reaction diffusion problem
-  CALL CMISSProblem_SpecificationSet(Problem,CMISS_PROBLEM_CLASSICAL_FIELD_CLASS, &
-    & CMISS_PROBLEM_REACTION_DIFFUSION_EQUATION_TYPE, &
-    & CMISS_PROBLEM_CELLML_REAC_INTEG_REAC_DIFF_STRANG_SPLIT_SUBTYPE,Err)
   !Finish the creation of a problem.
-  CALL CMISSProblem_CreateFinish(Problem,Err)
+  CALL cmfe_Problem_CreateFinish(Problem,Err)
 
   !Create the problem control
-  CALL CMISSProblem_ControlLoopCreateStart(Problem,Err)
+  CALL cmfe_Problem_ControlLoopCreateStart(Problem,Err)
   !Get the control loop
-  CALL CMISSControlLoop_Initialise(ControlLoop,Err)
-  CALL CMISSProblem_ControlLoopGet(Problem,CMISS_CONTROL_LOOP_NODE,ControlLoop,Err)
+  CALL cmfe_ControlLoop_Initialise(ControlLoop,Err)
+  CALL cmfe_Problem_ControlLoopGet(Problem,cmfe_CONTROL_LOOP_NODE,ControlLoop,Err)
   !Set the times
-  CALL CMISSControlLoop_TimesSet(ControlLoop,startT,endT,Tstep,Err)
-  CALL CMISSControlLoop_TimeOutputSet(ControlLoop,outputfreq,Err)
-  CALL CMISSControlLoop_OutputTypeSet(ControlLoop,CMISS_CONTROL_LOOP_PROGRESS_OUTPUT,Err)
-  !CALL CMISSControlLoopTimesSet(ControlLoop,0.0_CMISSDP,5.00_CMISSDP,0.01_CMISSDP,Err)
+  CALL cmfe_ControlLoop_TimesSet(ControlLoop,startT,endT,Tstep,Err)
+  CALL cmfe_ControlLoop_TimeOutputSet(ControlLoop,outputfreq,Err)
+  CALL cmfe_ControlLoop_OutputTypeSet(ControlLoop,cmfe_CONTROL_LOOP_PROGRESS_OUTPUT,Err)
+  !CALL cmfe_ControlLoopTimesSet(ControlLoop,0.0_CMISSDP,5.00_CMISSDP,0.01_CMISSDP,Err)
   !Finish creating the problem control loop
-  CALL CMISSProblem_ControlLoopCreateFinish(Problem,Err)
+  CALL cmfe_Problem_ControlLoopCreateFinish(Problem,Err)
 
 !______________________________________________________________________________________________________________
   !Set up the problem solvers for Strang splitting - 
   !note, this example is contrived to have strang splitting, when it could be solved as a simple evaluation (as opposed to integration) of source and diffusion
   WRITE(*,*) 'Set up the problem solvers for Strang splitting'
-  CALL CMISSProblem_SolversCreateStart(Problem,Err)
+  CALL cmfe_Problem_SolversCreateStart(Problem,Err)
   !First solver is a DAE solver
-  CALL CMISSSolver_Initialise(Solver,Err)
-  CALL CMISSProblem_SolverGet(Problem,CMISS_CONTROL_LOOP_NODE,1,Solver,Err)
-  CALL CMISSSolver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err)
-  CALL CMISSSolver_OutputTypeSet(Solver,CMISS_SOLVER_PROGRESS_OUTPUT,Err)
+  CALL cmfe_Solver_Initialise(Solver,Err)
+  CALL cmfe_Problem_SolverGet(Problem,cmfe_CONTROL_LOOP_NODE,1,Solver,Err)
+  CALL cmfe_Solver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err)
+  CALL cmfe_Solver_OutputTypeSet(Solver,cmfe_SOLVER_PROGRESS_OUTPUT,Err)
 
   !Second solver is the dynamic solver for solving the parabolic equation
-  CALL CMISSSolver_Initialise(Solver,Err)
-  CALL CMISSSolver_Initialise(LinearSolver,Err)
-  CALL CMISSProblem_SolverGet(Problem,CMISS_CONTROL_LOOP_NODE,2,Solver,Err)
+  CALL cmfe_Solver_Initialise(Solver,Err)
+  CALL cmfe_Solver_Initialise(LinearSolver,Err)
+  CALL cmfe_Problem_SolverGet(Problem,cmfe_CONTROL_LOOP_NODE,2,Solver,Err)
   !set theta - backward vs forward time step parameter
-  CALL CMISSSolver_DynamicThetaSet(Solver,1.0_CMISSDP,Err)
-  CALL CMISSSolver_OutputTypeSet(Solver,CMISS_SOLVER_PROGRESS_OUTPUT,Err)
-  !CALL CMISSSolverOutputTypeSet(Solver,CMISS_SOLVER_PROGRESS_OUTPUT,Err)
+  CALL cmfe_Solver_DynamicThetaSet(Solver,1.0_CMISSDP,Err)
+  CALL cmfe_Solver_OutputTypeSet(Solver,cmfe_SOLVER_PROGRESS_OUTPUT,Err)
+  !CALL cmfe_SolverOutputTypeSet(Solver,cmfe_SOLVER_PROGRESS_OUTPUT,Err)
   !get the dynamic linear solver from the solver
-  CALL CMISSSolver_DynamicLinearSolverGet(Solver,LinearSolver,Err)
+  CALL cmfe_Solver_DynamicLinearSolverGet(Solver,LinearSolver,Err)
   !set linear solver to be direct solver. Note, I found this stuff in fluidmechanics/darcy/dynamic/src example
-  !CALL CMISSSolverLinearTypeSet(LinearSolver,CMISSSolverLinearDirectSolveType,Err)
-  !CALL CMISSSolverLibraryTypeSet(LinearSolver,CMISSSolverCMISSLibrary,Err)
-  !CALL CMISSSolverLinearTypeSet(LinearSolver,CMISSSolverLinearDirectSolveType,Err)
-  !CALL CMISSSolverLibraryTypeSet(LinearSolver,CMISSSolverMUMPSLibrary,Err)
-  CALL CMISSSolver_LinearIterativeMaximumIterationsSet(LinearSolver,1000,Err)
+  !CALL cmfe_SolverLinearTypeSet(LinearSolver,cmfe_SolverLinearDirectSolveType,Err)
+  !CALL cmfe_SolverLibraryTypeSet(LinearSolver,cmfe_Solvercmfe_Library,Err)
+  !CALL cmfe_SolverLinearTypeSet(LinearSolver,cmfe_SolverLinearDirectSolveType,Err)
+  !CALL cmfe_SolverLibraryTypeSet(LinearSolver,cmfe_SolverMUMPSLibrary,Err)
+  CALL cmfe_Solver_LinearIterativeMaximumIterationsSet(LinearSolver,1000,Err)
 
 
   !Third solver is another DAE solver
-  CALL CMISSSolver_Initialise(Solver,Err)
-  CALL CMISSProblem_SolverGet(Problem,CMISS_CONTROL_LOOP_NODE,3,Solver,Err)
-  CALL CMISSSolver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err) !set the third solver's integration time step
-  CALL CMISSSolver_OutputTypeSet(Solver,CMISS_SOLVER_PROGRESS_OUTPUT,Err)
-  !CALL CMISSSolverOutputTypeSet(Solver,CMISSSolverTimingOutput,Err)
-  !CALL CMISSSolverOutputTypeSet(Solver,CMISSSolverSolverOutput,Err)
-  !CALL CMISSSolverOutputTypeSet(Solver,CMISS_SOLVER_PROGRESS_OUTPUT,Err)
+  CALL cmfe_Solver_Initialise(Solver,Err)
+  CALL cmfe_Problem_SolverGet(Problem,cmfe_CONTROL_LOOP_NODE,3,Solver,Err)
+  CALL cmfe_Solver_DAETimeStepSet(Solver,ODE_TIME_STEP,Err) !set the third solver's integration time step
+  CALL cmfe_Solver_OutputTypeSet(Solver,cmfe_SOLVER_PROGRESS_OUTPUT,Err)
+  !CALL cmfe_SolverOutputTypeSet(Solver,cmfe_SolverTimingOutput,Err)
+  !CALL cmfe_SolverOutputTypeSet(Solver,cmfe_SolverSolverOutput,Err)
+  !CALL cmfe_SolverOutputTypeSet(Solver,cmfe_SOLVER_PROGRESS_OUTPUT,Err)
 
   !Finish the creation of the problem solver
-  CALL CMISSProblem_SolversCreateFinish(Problem,Err)
+  CALL cmfe_Problem_SolversCreateFinish(Problem,Err)
 
 !_______________________________________________________________________________________________________________
   !Start the creation of the problem solver CellML equations
-  CALL CMISSProblem_CellMLEquationsCreateStart(Problem,Err)
+  CALL cmfe_Problem_CellMLEquationsCreateStart(Problem,Err)
   !Get the first solver  
   !Get the CellML equations
-  CALL CMISSSolver_Initialise(Solver,Err)
-  CALL CMISSProblem_SolverGet(Problem,CMISS_CONTROL_LOOP_NODE,1,Solver,Err)
-  CALL CMISSCellMLEquations_Initialise(CellMLEquations,Err)
-  CALL CMISSSolver_CellMLEquationsGet(Solver,CellMLEquations,Err)
+  CALL cmfe_Solver_Initialise(Solver,Err)
+  CALL cmfe_Problem_SolverGet(Problem,cmfe_CONTROL_LOOP_NODE,1,Solver,Err)
+  CALL cmfe_CellMLEquations_Initialise(CellMLEquations,Err)
+  CALL cmfe_Solver_CellMLEquationsGet(Solver,CellMLEquations,Err)
   !Add in the CellML environement
-  CALL CMISSCellMLEquations_CellMLAdd(CellMLEquations,CellML,CellMLIndex,Err)
+  CALL cmfe_CellMLEquations_CellMLAdd(CellMLEquations,CellML,CellMLIndex,Err)
 
   !Get the third solver  
   !Get the CellML equations
-  CALL CMISSSolver_Initialise(Solver,Err)
-  CALL CMISSProblem_SolverGet(Problem,CMISS_CONTROL_LOOP_NODE,3,Solver,Err)
-  CALL CMISSCellMLEquations_Initialise(CellMLEquations,Err)
-  CALL CMISSSolver_CellMLEquationsGet(Solver,CellMLEquations,Err)
+  CALL cmfe_Solver_Initialise(Solver,Err)
+  CALL cmfe_Problem_SolverGet(Problem,cmfe_CONTROL_LOOP_NODE,3,Solver,Err)
+  CALL cmfe_CellMLEquations_Initialise(CellMLEquations,Err)
+  CALL cmfe_Solver_CellMLEquationsGet(Solver,CellMLEquations,Err)
   !Add in the CellML environement
-  CALL CMISSCellMLEquations_CellMLAdd(CellMLEquations,CellML,CellMLIndex,Err)
+  CALL cmfe_CellMLEquations_CellMLAdd(CellMLEquations,CellML,CellMLIndex,Err)
 
   !Finish the creation of the problem solver CellML equations
-  CALL CMISSProblem_CellMLEquationsCreateFinish(Problem,Err)
+  CALL cmfe_Problem_CellMLEquationsCreateFinish(Problem,Err)
 
 !_______________________________________________________________________________________________________________
   !Start the creation of the problem solver equations
-  CALL CMISSProblem_SolverEquationsCreateStart(Problem,Err)
+  CALL cmfe_Problem_SolverEquationsCreateStart(Problem,Err)
   !Get the second solver  
   !Get the solver equations
-  CALL CMISSSolver_Initialise(Solver,Err)
-  CALL CMISSProblem_SolverGet(Problem,CMISS_CONTROL_LOOP_NODE,2,Solver,Err)
-  CALL CMISSSolverEquations_Initialise(SolverEquations,Err)
-  CALL CMISSSolver_SolverEquationsGet(Solver,SolverEquations,Err)
+  CALL cmfe_Solver_Initialise(Solver,Err)
+  CALL cmfe_Problem_SolverGet(Problem,cmfe_CONTROL_LOOP_NODE,2,Solver,Err)
+  CALL cmfe_SolverEquations_Initialise(SolverEquations,Err)
+  CALL cmfe_Solver_SolverEquationsGet(Solver,SolverEquations,Err)
   !Set the solver equations sparsity
-  !CALL CMISSSolverEquationsSparsityTypeSet(SolverEquations,CMISSSolverEquationsSparseMatrices,Err)
-  CALL CMISSSolverEquations_SparsityTypeSet(SolverEquations,CMISS_SOLVER_SPARSE_MATRICES,Err)  
+  !CALL cmfe_SolverEquationsSparsityTypeSet(SolverEquations,cmfe_SolverEquationsSparseMatrices,Err)
+  CALL cmfe_SolverEquations_SparsityTypeSet(SolverEquations,cmfe_SOLVER_SPARSE_MATRICES,Err)  
   !Add in the equations set for Ca, F and FCa
-  CALL CMISSSolverEquations_EquationsSetAdd(SolverEquations,CaEquationsSet,EquationsSetIndex,Err)
-  CALL CMISSSolverEquations_EquationsSetAdd(SolverEquations,FEquationsSet,EquationsSetIndex,Err)
-  CALL CMISSSolverEquations_EquationsSetAdd(SolverEquations,FCaEquationsSet,EquationsSetIndex,Err)
-  CALL CMISSSolverEquations_EquationsSetAdd(SolverEquations,CaMEquationsSet,EquationsSetIndex,Err)
-  CALL CMISSSolverEquations_EquationsSetAdd(SolverEquations,CaMCaEquationsSet,EquationsSetIndex,Err)
-  CALL CMISSSolverEquations_EquationsSetAdd(SolverEquations,ATPEquationsSet,EquationsSetIndex,Err)
-  CALL CMISSSolverEquations_EquationsSetAdd(SolverEquations,ATPCaEquationsSet,EquationsSetIndex,Err)
+  CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquations,CaEquationsSet,EquationsSetIndex,Err)
+  CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquations,FEquationsSet,EquationsSetIndex,Err)
+  CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquations,FCaEquationsSet,EquationsSetIndex,Err)
+  CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquations,CaMEquationsSet,EquationsSetIndex,Err)
+  CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquations,CaMCaEquationsSet,EquationsSetIndex,Err)
+  CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquations,ATPEquationsSet,EquationsSetIndex,Err)
+  CALL cmfe_SolverEquations_EquationsSetAdd(SolverEquations,ATPCaEquationsSet,EquationsSetIndex,Err)
 
   !Finish the creation of the problem solver equations
-  CALL CMISSProblem_SolverEquationsCreateFinish(Problem,Err)
+  CALL cmfe_Problem_SolverEquationsCreateFinish(Problem,Err)
 !_________________________________________________________________________________________________________
   WRITE(*,*) 'Set up boundary conditions'  
-  CALL CMISSBoundaryConditions_Initialise(BoundaryConditions,Err)
-  CALL CMISSSolverEquations_BoundaryConditionsCreateStart(SolverEquations,BoundaryConditions,Err)
+  CALL cmfe_BoundaryConditions_Initialise(BoundaryConditions,Err)
+  CALL cmfe_SolverEquations_BoundaryConditionsCreateStart(SolverEquations,BoundaryConditions,Err)
 
   !Set 0 conc. bc on nodes within mitos
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
     DO node=1,NUMBER_OF_NODES
       NODE_NUMBER = NodeNums(node,1)
       IF(NodeNums(node,2).EQ.MITO_REGION_MARKER) THEN
-        CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+        CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
         IF(NodeDomain==ComputationalNodeNumber) THEN
-          CONDITION = CMISS_BOUNDARY_CONDITION_FIXED
+          CONDITION = cmfe_BOUNDARY_CONDITION_FIXED
           VALUE=0.0_CMISSDP
-          CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaField, &
-            & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+          CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,CaField, &
+            & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
             & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
 
-          CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FField, &
-            & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+          CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,FField, &
+            & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
             & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
 
-          CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FCaField, &
-            & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+          CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,FCaField, &
+            & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
             & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
 
-          CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaMField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+          CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,CaMField, &
+          & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
 
-          CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaMCaField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
-          & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
-
-
-          CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,ATPField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+          CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,CaMCaField, &
+          & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
 
 
-          CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,ATPCaField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+          CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,ATPField, &
+          & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
+          & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
+
+
+          CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,ATPCaField, &
+          & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,VALUE,Err) !(dirchlet boundary condition)
 
         ENDIF
@@ -1841,177 +1848,177 @@ PROGRAM CARDIAC_ECC
   IF(WITH_MITO_ELEMENTS.EQ.1) THEN
     DO node=1,NUMBER_OF_MITOBDFACENODES
       NODE_NUMBER = MITOBDFaceNodes(node)
-      CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+      CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
       IF(NodeDomain==ComputationalNodeNumber) THEN
-        CONDITION = CMISS_BOUNDARY_CONDITION_FIXED
+        CONDITION = cmfe_BOUNDARY_CONDITION_FIXED
         VALUE=0.0_CMISSDP
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaField, &
-          & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+        CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,CaField, &
+          & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)!
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FField, &
-          & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+        CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,FField, &
+          & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FCaField, &
-          & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+        CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,FCaField, &
+          & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaMField, &
-          & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+        CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,CaMField, &
+          & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaMCaField, &
-          & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+        CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,CaMCaField, &
+          & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,ATPField, &
-          & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+        CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,ATPField, &
+          & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,ATPCaField, &
-          & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+        CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,ATPCaField, &
+          & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
         !make sure to unset mito bd node bcs to be free from dirchlet bcs set above.
 
-        CONDITION = CMISS_BOUNDARY_CONDITION_FREE
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+        CONDITION = cmfe_BOUNDARY_CONDITION_FREE
+        CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,CaField, &
+          & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,init_Ca,Err) !(neumann boundary condition - no flux)
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+        CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,FField, &
+          & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,init_F,Err) !(neumann boundary condition - no flux)
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FCaField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+        CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,FCaField, &
+          & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,init_FCa,Err) !(neumann boundary condition - no flux)
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaMField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+        CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,CaMField, &
+          & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,init_CaM,Err) !(neumann boundary condition - no flux)
 
-         CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaMCaField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+         CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,CaMCaField, &
+          & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,init_CaMCa,Err) !(neumann boundary condition - no flux)
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,ATPField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+        CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,ATPField, &
+          & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,init_ATP,Err) !(neumann boundary condition - no flux)
 
-        CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,ATPCaField, &
-          & CMISS_FIELD_U_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+        CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,ATPCaField, &
+          & cmfe_FIELD_U_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
           & NODE_NUMBER,1,CONDITION,init_ATPCa,Err) !(neumann boundary condition - no flux)
 
 
 
         !Set the initial conc. at these mito boundary nodes to be the cytosolic versions
-        CALL CMISSField_ParameterSetUpdateNode(CaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_Ca,Err)
+        CALL cmfe_Field_ParameterSetUpdateNode(CaField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_Ca,Err)
 
-        CALL CMISSField_ParameterSetUpdateNode(FField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_F,Err)
+        CALL cmfe_Field_ParameterSetUpdateNode(FField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_F,Err)
 
-        CALL CMISSField_ParameterSetUpdateNode(FCaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_FCa,Err)
+        CALL cmfe_Field_ParameterSetUpdateNode(FCaField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_FCa,Err)
 
-        CALL CMISSField_ParameterSetUpdateNode(CaMField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_CaM,Err)
+        CALL cmfe_Field_ParameterSetUpdateNode(CaMField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_CaM,Err)
 
 
-        CALL CMISSField_ParameterSetUpdateNode(CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_CaMCa,Err)
+        CALL cmfe_Field_ParameterSetUpdateNode(CaMCaField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_CaMCa,Err)
 
-        CALL CMISSField_ParameterSetUpdateNode(ATPField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_ATP,Err)
+        CALL cmfe_Field_ParameterSetUpdateNode(ATPField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_ATP,Err)
 
-        CALL CMISSField_ParameterSetUpdateNode(ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE, &
-          & CMISS_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_ATPCa,Err)
+        CALL cmfe_Field_ParameterSetUpdateNode(ATPCaField,cmfe_FIELD_U_VARIABLE_TYPE, &
+          & cmfe_FIELD_VALUES_SET_TYPE,1,1,NODE_NUMBER,1,init_ATPCa,Err)
 
 
       ENDIF
     ENDDO
-    CALL CMISSField_ParameterSetUpdateStart(CaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(CaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(CaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(CaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
-    CALL CMISSField_ParameterSetUpdateStart(FField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(FField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(FField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(FField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
-    CALL CMISSField_ParameterSetUpdateStart(FCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(FCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(FCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(FCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
-    CALL CMISSField_ParameterSetUpdateStart(CaMField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(CaMField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(CaMField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(CaMField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
-    CALL CMISSField_ParameterSetUpdateStart(CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(CaMCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(CaMCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(CaMCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
-    CALL CMISSField_ParameterSetUpdateStart(ATPField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(ATPField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(ATPField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(ATPField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
-    CALL CMISSField_ParameterSetUpdateStart(ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
-    CALL CMISSField_ParameterSetUpdateFinish(ATPCaField,CMISS_FIELD_U_VARIABLE_TYPE,CMISS_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateStart(ATPCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
+    CALL cmfe_Field_ParameterSetUpdateFinish(ATPCaField,cmfe_FIELD_U_VARIABLE_TYPE,cmfe_FIELD_VALUES_SET_TYPE,Err)
 
     ENDIF
 
   !Set no flux on cell boundary
   DO node=1,NUMBER_OF_CELLBDNODES
     NODE_NUMBER = CELLBDNodes(node)
-    CALL CMISSDecomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
+    CALL cmfe_Decomposition_NodeDomainGet(Decomposition,NODE_NUMBER,1,NodeDomain,Err)
     IF(NodeDomain==ComputationalNodeNumber) THEN
-      CONDITION = CMISS_BOUNDARY_CONDITION_FIXED
+      CONDITION = cmfe_BOUNDARY_CONDITION_FIXED
       VALUE=0.0_CMISSDP
-      CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaField, &
-        & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+      CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,CaField, &
+        & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
         & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
-      CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FField, &
-        & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+      CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,FField, &
+        & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
         & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
-      CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,FCaField, &
-        & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+      CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,FCaField, &
+        & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
         & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
-      CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaMField, &
-      & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+      CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,CaMField, &
+      & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
       & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
 
-      CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,CaMCaField, &
-      & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+      CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,CaMCaField, &
+      & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
       & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
 
-      CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,ATPField, &
-      & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+      CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,ATPField, &
+      & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
       & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
 
-      CALL CMISSBoundaryConditions_SetNode(BoundaryConditions,ATPCaField, &
-      & CMISS_FIELD_DELUDELN_VARIABLE_TYPE,1,CMISS_NO_GLOBAL_DERIV, &
+      CALL cmfe_BoundaryConditions_SetNode(BoundaryConditions,ATPCaField, &
+      & cmfe_FIELD_DELUDELN_VARIABLE_TYPE,1,cmfe_NO_GLOBAL_DERIV, &
       & NODE_NUMBER,1,CONDITION,VALUE,Err) !(neumann boundary condition - no flux)
 
     ENDIF
   ENDDO
 
-  CALL CMISSSolverEquations_BoundaryConditionsCreateFinish(SolverEquations,Err)
+  CALL cmfe_SolverEquations_BoundaryConditionsCreateFinish(SolverEquations,Err)
 
 !__________________________________________________________________________________________________________
   !Solve the problem
-  CALL CMISSProblem_Solve(Problem,Err)
+  CALL cmfe_Problem_Solve(Problem,Err)
 !__________________________________________________________________________________________________________
   IF(EXPORT_FIELD) THEN
-    CALL CMISSFields_Initialise(Fields,Err)
-    CALL CMISSFields_Create(Region,Fields,Err)
-    CALL CMISSFields_NodesExport(Fields,"Cell_Solution","FORTRAN",Err)
-    CALL CMISSFields_ElementsExport(Fields,"Cell_Solution","FORTRAN",Err)
-    CALL CMISSFields_Finalise(Fields,Err)
+    CALL cmfe_Fields_Initialise(Fields,Err)
+    CALL cmfe_Fields_Create(Region,Fields,Err)
+    CALL cmfe_Fields_NodesExport(Fields,"Cell_Solution","FORTRAN",Err)
+    CALL cmfe_Fields_ElementsExport(Fields,"Cell_Solution","FORTRAN",Err)
+    CALL cmfe_Fields_Finalise(Fields,Err)
   ENDIF 
-  !Finialise CMISS
-  CALL CMISSFinalise(Err)
+  !Finialise cmfe_
+  CALL cmfe_Finalise(Err)
 
   WRITE(*,'(A)') "Program successfully completed."
   
