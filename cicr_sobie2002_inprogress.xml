@@ -1,6 +1,7 @@
 <?xml version='1.0'?>
 <model cmeta:id="Iz9t89a_d5G" name="cicr_v1" xmlns="http://www.cellml.org/cellml/1.1#" xmlns:cellml="http://www.cellml.org/cellml/1.1#" xmlns:cmeta="http://www.cellml.org/metadata/1.0#">
     <component name="Cytoplasm">
+        <variable initial_value="1" name="NumDyads" units="dimensionless"/>
         <variable initial_value="0.1" name="Ca_i" public_interface="out" units="uM"/>
         <variable initial_value="0.1" name="Ca_cyto" public_interface="out" units="uM"/>
         <variable name="time" public_interface="in" units="ms"/>
@@ -23,7 +24,7 @@
         <variable name="JCaM" public_interface="out" units="uMpms"/>
         <variable name="CaMTotal" units="uM"/>
         <variable name="V_dyad" public_interface="in" units="m3"/>
-        <variable initial_value="2.584e-14" name="V_cell" public_interface="out" units="m3"/>
+        <variable initial_value="2.584e-21" name="V_cell" public_interface="out" units="m3"/>
         <variable initial_value="0.225" name="ATPOnRate" units="puMms"/>
         <variable initial_value="45.0" name="ATPOffRate" units="pms"/>
         <variable initial_value="0.318" name="ATPCa" public_interface="out" units="uM"/>
@@ -237,24 +238,29 @@
                     <ci>Ca_cyto</ci>
                 </apply>
                 <apply>
-                    <plus/>
+                    <minus/>
                     <apply>
                         <minus/>
                         <apply>
-                            <minus/>
-                            <apply>
-                                <plus/>
-                                <ci>J_tnc</ci>
-                                <ci>J_fluo</ci>
-                                <ci>JATP</ci>
-                                <ci>JCaM</ci>
-                                <ci>J_SRBuf</ci>
-                            </apply>
-                            <ci>J_cyto</ci>
+                            <plus/>
+                            <ci>J_tnc</ci>
+                            <ci>J_fluo</ci>
+                            <ci>JATP</ci>
+                            <ci>JCaM</ci>
+                            <ci>J_SRBuf</ci>
                         </apply>
-                        <ci>J_serca</ci>
+                        <apply>
+                            <divide/>
+                            <apply>
+                                <times/>
+                                <ci>J_cyto</ci>
+                                <ci>V_dyad</ci>
+                                <ci>NumDyads</ci>
+                            </apply>
+                            <ci>V_cell</ci>
+                        </apply>
                     </apply>
-                    <ci>J_leak</ci>
+                    <ci>J_serca</ci>
                 </apply>
             </apply>
         </math>
@@ -640,7 +646,7 @@
                     <times/>
                     <apply>
                         <minus/>
-                        <ci>Ca_i</ci>
+                        <ci>Ca_cyto</ci>
                         <ci>Ca_dyad</ci>
                     </apply>
                     <ci>g_cyto</ci>
@@ -690,27 +696,13 @@
                 </apply>
             </apply>
         </math>
-        <!-- calcium sum-->
-        <variable name="Ca_sum" public_interface="out" units="uM"/>
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-            <apply>
-                <eq/>
-                <ci>Ca_sum</ci>
-                <apply>
-                    <plus/>
-                    <ci>Ca_cyto</ci>
-                    <ci>Ca_nsr</ci>
-                    <ci>Ca_jsr</ci>
-                    <ci>Ca_i</ci>
-                    <ci>Ca_dyad</ci>
-                </apply>
-            </apply>
-        </math>
     </component>
     <component name="SR">
         <variable initial_value="1000" name="Ca_nsr" public_interface="out" units="uM"/>
         <variable initial_value="1000" name="Ca_jsr" public_interface="out" units="uM"/>
         <variable name="V_dyad" public_interface="in" units="m3"/>
+        <variable name="V_cell" public_interface="in" units="m3"/>
+        <variable initial_value="1.458e-18" name="V_nsr" public_interface="out" units="m3"/>
         <variable initial_value="3.78e-21" name="V_jsr" public_interface="out" units="m3"/>
         <variable name="J_ryr" public_interface="in" units="uMpms"/>
         <variable name="J_refill" public_interface="out" units="uMpms"/>
@@ -809,8 +801,24 @@
                 </apply>
                 <apply>
                     <minus/>
-                    <ci>J_serca</ci>
-                    <ci>J_leak</ci>
+                    <apply>
+                        <divide/>
+                        <apply>
+                            <times/>
+                            <ci>J_serca</ci>
+                            <ci>V_cell</ci>
+                        </apply>
+                        <ci>V_nsr</ci>
+                    </apply>
+                    <apply>
+                        <divide/>
+                        <apply>
+                            <times/>
+                            <ci>J_refill</ci>
+                            <ci>V_jsr</ci>
+                        </apply>
+                        <ci>V_nsr</ci>
+                    </apply>
                 </apply>
             </apply>
         </math>
@@ -879,6 +887,7 @@
         <map_variables variable_1="J_leak" variable_2="J_leak"/>
         <map_variables variable_1="J_serca" variable_2="J_serca"/>
         <map_variables variable_1="Ca_nsr" variable_2="Ca_nsr"/>
+        <map_variables variable_1="V_cell" variable_2="V_cell"/>
     </connection>
     <connection>
         <map_components component_1="environment" component_2="Dyad"/>
