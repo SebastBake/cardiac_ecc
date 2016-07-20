@@ -46,6 +46,7 @@
         <variable initial_value="0.184" name="K_serca" units="uM"/>
         <variable initial_value="4.0" name="m_serca" units="dimensionless"/>
         <variable initial_value="1" name="num_serca" units="dimensionless"/>
+        <variable name="V_nsr" public_interface="in" units="m3"/>
         <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply cmeta:id="Ca_cyto">
                 <eq/>
@@ -79,7 +80,15 @@
                             <ci>V_cell</ci>
                         </apply>
                     </apply>
-                    <ci>J_serca</ci>
+                    <apply>
+                        <divide/>
+                        <apply>
+                            <times/>
+                            <ci>J_serca</ci>
+                            <ci>V_nsr</ci>
+                        </apply>
+                        <ci>V_cell</ci>
+                    </apply>
                 </apply>
             </apply>
             <apply>
@@ -385,6 +394,8 @@
         <variable initial_value="0.0" name="SLBufTotal" units="uM"/>
         <variable initial_value="0.0" name="CaSLBuf" units="uM"/>
         <variable name="J_SLBuf" units="uMpms"/>
+        <variable name="V_cell" public_interface="in" units="m3"/>
+        <variable name="V_jsr" public_interface="in" units="m3"/>
         <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
                 <eq/>
@@ -397,8 +408,24 @@
                 </apply>
                 <apply>
                     <plus/>
-                    <ci>J_cyto</ci>
-                    <ci>J_ryr</ci>
+                    <apply>
+                        <divide/>
+                        <apply>
+                            <times/>
+                            <ci>J_cyto</ci>
+                            <ci>V_cell</ci>
+                        </apply>
+                        <ci>V_dyad</ci>
+                    </apply>
+                    <apply>
+                        <divide/>
+                        <apply>
+                            <times/>
+                            <ci>J_ryr</ci>
+                            <ci>V_jsr</ci>
+                        </apply>
+                        <ci>V_dyad</ci>
+                    </apply>
                     <ci>J_lcc</ci>
                     <ci>J_SLBuf</ci>
                 </apply>
@@ -867,6 +894,7 @@
         <map_variables variable_1="J_cyto" variable_2="J_cyto"/>
         <map_variables variable_1="Ca_cyto" variable_2="Ca_cyto"/>
         <map_variables variable_1="V_dyad" variable_2="V_dyad"/>
+        <map_variables variable_1="V_cell" variable_2="V_cell"/>
     </connection>
     <connection>
         <map_components component_1="Cytoplasm" component_2="SR"/>
@@ -874,6 +902,7 @@
         <map_variables variable_1="J_serca" variable_2="J_serca"/>
         <map_variables variable_1="Ca_nsr" variable_2="Ca_nsr"/>
         <map_variables variable_1="V_cell" variable_2="V_cell"/>
+        <map_variables variable_1="V_nsr" variable_2="V_nsr"/>
     </connection>
     <connection>
         <map_components component_1="environment" component_2="Dyad"/>
@@ -888,6 +917,7 @@
         <map_variables variable_1="Ca_jsr" variable_2="Ca_jsr"/>
         <map_variables variable_1="Ca_nsr" variable_2="Ca_nsr"/>
         <map_variables variable_1="V_dyad" variable_2="V_dyad"/>
+        <map_variables variable_1="V_jsr" variable_2="V_jsr"/>
         <map_variables variable_1="J_ryr" variable_2="J_ryr"/>
     </connection>
     <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
