@@ -4,49 +4,84 @@
         <variable name="time" public_interface="out" units="ms"/>
     </component>
     <component name="Cytoplasm">
-        <variable name="time" public_interface="in" units="ms"/>
-        <variable name="V_dyad" public_interface="in" units="m3"/>
-        <variable initial_value="2.584e-21" name="V_cell" public_interface="out" units="m3"/>
+        <variable initial_value="1" name="NumDyads" units="dimensionless"/>
         <variable initial_value="0.1" name="Ca_i" public_interface="out" units="uM"/>
         <variable initial_value="0.1" name="Ca_cyto" public_interface="out" units="uM"/>
-        <variable name="Ca_nsr" public_interface="in" units="uM"/>
+        <variable name="time" public_interface="in" units="ms"/>
+        <variable name="J_cyto" public_interface="in" units="uMpms"/>
+        <variable name="J_tnc" public_interface="out" units="uMpms"/>
         <variable initial_value="10" name="CaTnC" units="uM"/>
         <variable initial_value="0.0327" name="TncOnrate" units="puMms"/>
         <variable initial_value="0.0196" name="TncOffrate" units="pms"/>
         <variable initial_value="70" name="TnCtotal" units="uM"/>
-        <variable name="J_tnc" public_interface="out" units="uMpms"/>
         <variable initial_value="0.1" name="FluoOnRate" units="puMms"/>
         <variable initial_value="0.11" name="FluoOffRate" units="pms"/>
         <variable initial_value="2.08" name="FluoCa" public_interface="out" units="uM"/>
         <variable initial_value="22.92" name="Fluo_free" units="uM"/>
-        <variable name="FluoTotal" units="uM"/>
         <variable name="J_fluo" public_interface="out" units="uMpms"/>
+        <variable name="Ca_nsr" public_interface="in" units="uM"/>
         <variable initial_value="0.034" name="CaMOnRate" units="puMms"/>
         <variable initial_value="0.238" name="CaMOffRate" units="pms"/>
         <variable initial_value="0.471" name="CaMCa" public_interface="out" units="uM"/>
         <variable initial_value="23.529" name="CaM_free" units="uM"/>
         <variable name="JCaM" public_interface="out" units="uMpms"/>
         <variable name="CaMTotal" units="uM"/>
+        <variable name="V_dyad" public_interface="in" units="m3"/>
+        <variable initial_value="2.584e-21" name="V_cell" public_interface="out" units="m3"/>
         <variable initial_value="0.225" name="ATPOnRate" units="puMms"/>
         <variable initial_value="45.0" name="ATPOffRate" units="pms"/>
         <variable initial_value="0.318" name="ATPCa" public_interface="out" units="uM"/>
         <variable initial_value="454.682" name="ATP_free" units="uM"/>
         <variable name="JATP" public_interface="out" units="uMpms"/>
         <variable name="ATPTotal" units="uM"/>
+        <variable initial_value="0.0" name="SRBufTotal" units="uM"/>
+        <variable initial_value="0.0" name="CaSRBuf" units="uM"/>
+        <variable name="J_SRBuf" units="uMpms"/>
+        <variable initial_value="0.115" name="kon_SRBuf" units="puMms"/>
+        <variable initial_value="0.1" name="koff_SRBuf" units="pms"/>
+        <variable name="FluoTotal" units="uM"/>
         <variable name="J_serca" public_interface="out" units="uMpms"/>
         <variable name="J_leak" public_interface="out" units="uMpms"/>
         <variable initial_value="200" name="v_serca" units="uMpms"/>
         <variable initial_value="0.184" name="K_serca" units="uM"/>
         <variable initial_value="4.0" name="m_serca" units="dimensionless"/>
         <variable initial_value="1" name="num_serca" units="dimensionless"/>
-        <variable initial_value="0.0" name="SRBufTotal" units="uM"/>
-        <variable initial_value="0.0" name="CaSRBuf" units="uM"/>
-        <variable name="J_SRBuf" units="uMpms"/>
-        <variable initial_value="0.115" name="kon_SRBuf" units="puMms"/>
-        <variable initial_value="0.1" name="koff_SRBuf" units="pms"/>
-        <variable initial_value="1" name="NumDyads" units="dimensionless"/>
-        <variable name="J_cyto" public_interface="in" units="uMpms"/>
         <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply cmeta:id="Ca_cyto">
+                <eq/>
+                <apply>
+                    <diff/>
+                    <bvar>
+                        <ci>time</ci>
+                    </bvar>
+                    <ci>Ca_cyto</ci>
+                </apply>
+                <apply>
+                    <minus/>
+                    <apply>
+                        <minus/>
+                        <apply>
+                            <plus/>
+                            <ci>J_tnc</ci>
+                            <ci>J_fluo</ci>
+                            <ci>JATP</ci>
+                            <ci>JCaM</ci>
+                            <ci>J_SRBuf</ci>
+                        </apply>
+                        <apply>
+                            <divide/>
+                            <apply>
+                                <times/>
+                                <ci>J_cyto</ci>
+                                <ci>V_dyad</ci>
+                                <ci>NumDyads</ci>
+                            </apply>
+                            <ci>V_cell</ci>
+                        </apply>
+                    </apply>
+                    <ci>J_serca</ci>
+                </apply>
+            </apply>
             <apply>
                 <eq/>
                 <ci>JCaM</ci>
@@ -314,41 +349,6 @@
                     <ci>Ca_i</ci>
                 </apply>
             </apply>
-            <apply cmeta:id="Ca_cyto">
-                <eq/>
-                <apply>
-                    <diff/>
-                    <bvar>
-                        <ci>time</ci>
-                    </bvar>
-                    <ci>Ca_cyto</ci>
-                </apply>
-                <apply>
-                    <minus/>
-                    <apply>
-                        <minus/>
-                        <apply>
-                            <plus/>
-                            <ci>J_tnc</ci>
-                            <ci>J_fluo</ci>
-                            <ci>JATP</ci>
-                            <ci>JCaM</ci>
-                            <ci>J_SRBuf</ci>
-                        </apply>
-                        <apply>
-                            <divide/>
-                            <apply>
-                                <times/>
-                                <ci>J_cyto</ci>
-                                <ci>V_dyad</ci>
-                                <ci>NumDyads</ci>
-                            </apply>
-                            <ci>V_cell</ci>
-                        </apply>
-                    </apply>
-                    <ci>J_serca</ci>
-                </apply>
-            </apply>
         </math>
     </component>
     <component name="Dyad">
@@ -379,13 +379,30 @@
         <variable name="N_closed" units="dimensionless"/>
         <variable name="J_ryr" public_interface="out" units="uMpms"/>
         <variable initial_value="0.01" name="P_open" units="dimensionless"/>
+        <variable name="time" public_interface="in" units="ms"/>
         <variable initial_value="1" name="SLBufOffRate" units="pms"/>
         <variable initial_value="0.115" name="SLBufOnRate" units="puMms"/>
         <variable initial_value="0.0" name="SLBufTotal" units="uM"/>
         <variable initial_value="0.0" name="CaSLBuf" units="uM"/>
         <variable name="J_SLBuf" units="uMpms"/>
-        <variable name="time" public_interface="in" units="ms"/>
         <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+                <eq/>
+                <apply>
+                    <diff/>
+                    <bvar>
+                        <ci>time</ci>
+                    </bvar>
+                    <ci>Ca_dyad</ci>
+                </apply>
+                <apply>
+                    <plus/>
+                    <ci>J_cyto</ci>
+                    <ci>J_ryr</ci>
+                    <ci>J_lcc</ci>
+                    <ci>J_SLBuf</ci>
+                </apply>
+            </apply>
             <apply>
                 <eq/>
                 <ci>N_open</ci>
@@ -573,23 +590,6 @@
             </apply>
             <apply>
                 <eq/>
-                <apply>
-                    <diff/>
-                    <bvar>
-                        <ci>time</ci>
-                    </bvar>
-                    <ci>Ca_dyad</ci>
-                </apply>
-                <apply>
-                    <plus/>
-                    <ci>J_cyto</ci>
-                    <ci>J_ryr</ci>
-                    <ci>J_lcc</ci>
-                    <ci>J_SLBuf</ci>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
                 <ci>i_lcc</ci>
                 <piecewise>
                     <piece>
@@ -707,6 +707,64 @@
         <math xmlns="http://www.w3.org/1998/Math/MathML">
             <apply>
                 <eq/>
+                <apply>
+                    <diff/>
+                    <bvar>
+                        <ci>time</ci>
+                    </bvar>
+                    <ci>Ca_nsr</ci>
+                </apply>
+                <apply>
+                    <minus/>
+                    <apply>
+                        <divide/>
+                        <apply>
+                            <times/>
+                            <ci>J_serca</ci>
+                            <ci>V_cell</ci>
+                        </apply>
+                        <ci>V_nsr</ci>
+                    </apply>
+                    <apply>
+                        <divide/>
+                        <apply>
+                            <times/>
+                            <ci>J_refill</ci>
+                            <ci>V_jsr</ci>
+                        </apply>
+                        <ci>V_nsr</ci>
+                    </apply>
+                </apply>
+            </apply>
+            <apply>
+                <eq/>
+                <apply>
+                    <diff/>
+                    <bvar>
+                        <ci>time</ci>
+                    </bvar>
+                    <ci>Ca_jsr</ci>
+                </apply>
+                <apply>
+                    <times/>
+                    <ci>beta_jsr</ci>
+                    <apply>
+                        <minus/>
+                        <ci>J_refill</ci>
+                        <apply>
+                            <divide/>
+                            <apply>
+                                <times/>
+                                <ci>J_ryr</ci>
+                                <ci>V_dyad</ci>
+                            </apply>
+                            <ci>V_jsr</ci>
+                        </apply>
+                    </apply>
+                </apply>
+            </apply>
+            <apply>
+                <eq/>
                 <ci>beta_jsr</ci>
                 <apply>
                     <power/>
@@ -748,64 +806,6 @@
                         <ci>Ca_jsr</ci>
                     </apply>
                     <ci>g_refill</ci>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <apply>
-                    <diff/>
-                    <bvar>
-                        <ci>time</ci>
-                    </bvar>
-                    <ci>Ca_jsr</ci>
-                </apply>
-                <apply>
-                    <times/>
-                    <ci>beta_jsr</ci>
-                    <apply>
-                        <minus/>
-                        <ci>J_refill</ci>
-                        <apply>
-                            <divide/>
-                            <apply>
-                                <times/>
-                                <ci>J_ryr</ci>
-                                <ci>V_dyad</ci>
-                            </apply>
-                            <ci>V_jsr</ci>
-                        </apply>
-                    </apply>
-                </apply>
-            </apply>
-            <apply>
-                <eq/>
-                <apply>
-                    <diff/>
-                    <bvar>
-                        <ci>time</ci>
-                    </bvar>
-                    <ci>Ca_nsr</ci>
-                </apply>
-                <apply>
-                    <minus/>
-                    <apply>
-                        <divide/>
-                        <apply>
-                            <times/>
-                            <ci>J_serca</ci>
-                            <ci>V_cell</ci>
-                        </apply>
-                        <ci>V_nsr</ci>
-                    </apply>
-                    <apply>
-                        <divide/>
-                        <apply>
-                            <times/>
-                            <ci>J_refill</ci>
-                            <ci>V_jsr</ci>
-                        </apply>
-                        <ci>V_nsr</ci>
-                    </apply>
                 </apply>
             </apply>
         </math>
